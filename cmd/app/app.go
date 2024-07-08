@@ -1,9 +1,9 @@
 package app
 
 import (
+	"github.com/vnworkday/account/internal/conf"
+	"github.com/vnworkday/account/internal/logger"
 	"github.com/vnworkday/common/pkg/log"
-	"github.com/vnworkday/go-template/internal/conf"
-	"github.com/vnworkday/go-template/internal/logger"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )

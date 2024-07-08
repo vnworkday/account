@@ -1,4 +1,4 @@
-module github.com/vnworkday/go-template
+module github.com/vnworkday/account
 
 go 1.22
 

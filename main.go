@@ -1,6 +1,6 @@
 package main
 
-import "github.com/vnworkday/go-template/cmd/app"
+import "github.com/vnworkday/account/cmd/app"
 
 func main() {
 	app.Run()

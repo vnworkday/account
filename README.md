@@ -1,4 +1,4 @@
-# VN Workday - {{ .ServiceName }}
+# VN Workday - Account
 
 [//]: # (This project is a template for creating a new service in the VN Workday system. It provides a starting point for)
 [//]: # (creating a new service that follows the best practices and conventions used widely across VN Workday microservices.)
@@ -18,8 +18,6 @@
 [//]: # (- **License**: The template includes a license file that specifies the license under which the service is distributed.)
 [//]: # (- **Contributing Guidelines**: The template includes a CONTRIBUTING file that specifies the guidelines for contributing)
 [//]: # (  to the service.)
-
-[//]: # ({{ .ServiceDescription }})
 
 ## Project Structure
 

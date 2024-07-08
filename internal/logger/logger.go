@@ -1,8 +1,8 @@
 package logger
 
 import (
+	"github.com/vnworkday/account/internal/conf"
 	"github.com/vnworkday/common/pkg/log"
-	"github.com/vnworkday/go-template/internal/conf"
 
 	"go.uber.org/fx"
 	"go.uber.org/zap"

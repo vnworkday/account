@@ -1,7 +1,7 @@
 {
-  "name": "go-service-template",
+  "name": "account",
   "version": "1.0.0",
-  "description": "This project is a template for creating a new service in the VN Workday system. It provides a starting point for creating a new service that follows the best practices and conventions used widely across VN Workday microservices.",
+  "description": "VN Workday - Account Service",
   "main": "index.js",
   "scripts": {
     "lint": "make lint",

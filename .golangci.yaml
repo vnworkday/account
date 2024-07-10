@@ -1,5 +1,5 @@
 run: # https://golangci-lint.run/usage/configuration/
-  timeout: 5m
+  timeout: 3m
 
 # all available settings of specific linters
 linters-settings:
@@ -20,8 +20,8 @@ linters-settings:
         deny:
           - pkg: "github.com/golang/protobuf"
             desc: Superseded by google.golang.org/protobuf
-          - pkg: "github.com/pkg/errors"
-            desc: Should be replaced by standard lib errors package
+          - pkg: "errors"
+            desc: Should be replaced by github.com/pkg/errors
   ireturn:
     allow:
       - anon # allow anonymous returns
@@ -44,6 +44,11 @@ linters-settings:
   wsl:
     allow-cuddle-declarations: true
     allow-assign-and-anything: true
+  tagliatelle:
+    case:
+      rules:
+        json: snake
+        yaml: snake
 
 linters:
   enable-all: true
@@ -54,6 +59,7 @@ linters:
     - gci # already used goimports
     - testpackage
     - wrapcheck # this seems to be a false positive
+    - ireturn # too annoying
 
 output:
   sort-results: true

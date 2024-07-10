@@ -2,20 +2,10 @@ package repository
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/vnworkday/account/internal/model"
 )
-
-func AppendSortClause(query *strings.Builder, sorts ...string) {
-	if len(sorts) == 0 {
-		return
-	}
-
-	query.WriteString(" ORDER BY ")
-	query.WriteString(strings.Join(sorts, ", "))
-}
 
 func StringifySort(sort model.Sort, optAlias ...string) (string, error) {
 	var alias string

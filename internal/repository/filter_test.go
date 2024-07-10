@@ -2,52 +2,11 @@ package repository
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/vnworkday/account/internal/model"
 )
-
-func TestAppendWhereClause(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		filters []string
-		want    string
-	}{
-		{
-			name:    "NoFilters",
-			filters: []string{},
-			want:    "",
-		},
-		{
-			name:    "SingleFilter",
-			filters: []string{"username = 'john_doe'"},
-			want:    " WHERE username = 'john_doe'",
-		},
-		{
-			name:    "MultipleFilters",
-			filters: []string{"username = 'john_doe'", "age > 30"},
-			want:    " WHERE username = 'john_doe' AND age > 30",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var query strings.Builder
-			AppendWhereClause(&query, tt.filters...)
-			got := query.String()
-
-			if got != tt.want {
-				t.Errorf("AppendWhereClause() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestStringifyFilter(t *testing.T) {
 	t.Parallel()

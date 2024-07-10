@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type IService interface {
+type Service interface {
 	ListTenants(ctx context.Context, request ListTenantsRequest) (ListTenantsResponse, error)
 	GetTenant(ctx context.Context, request GetTenantRequest) (Tenant, error)
 	CreateTenant(ctx context.Context, request CreateTenantRequest) (Tenant, error)
@@ -20,12 +20,28 @@ type Params struct {
 	Logger *zap.Logger
 }
 
-func NewService(params Params) *Service {
-	return &Service{
+func NewService(params Params) Service {
+	return &service{
 		logger: params.Logger,
 	}
 }
 
-type Service struct {
+type service struct {
 	logger *zap.Logger
+}
+
+func (s service) ListTenants(_ context.Context, _ ListTenantsRequest) (ListTenantsResponse, error) {
+	panic("implement me")
+}
+
+func (s service) GetTenant(_ context.Context, _ GetTenantRequest) (Tenant, error) {
+	panic("implement me")
+}
+
+func (s service) CreateTenant(_ context.Context, _ CreateTenantRequest) (Tenant, error) {
+	panic("implement me")
+}
+
+func (s service) UpdateTenant(_ context.Context, _ UpdateTenantRequest) (Tenant, error) {
+	panic("implement me")
 }

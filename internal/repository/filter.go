@@ -15,15 +15,6 @@ const (
 	keyValueSplitLen = 2
 )
 
-func AppendWhereClause(query *strings.Builder, filters ...string) {
-	if len(filters) == 0 {
-		return
-	}
-
-	query.WriteString(" WHERE ")
-	query.WriteString(strings.Join(filters, " AND "))
-}
-
 func StringifyFilter(filter model.Filter, optAlias ...string) (string, error) {
 	var alias string
 

@@ -1,51 +1,10 @@
 package repository
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/vnworkday/account/internal/model"
 )
-
-func TestAppendSortClause(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name  string
-		sorts []string
-		want  string
-	}{
-		{
-			name:  "NoSorts",
-			sorts: []string{},
-			want:  "",
-		},
-		{
-			name:  "SingleSort",
-			sorts: []string{"username ASC"},
-			want:  " ORDER BY username ASC",
-		},
-		{
-			name:  "MultipleSorts",
-			sorts: []string{"username ASC", "created_at DESC"},
-			want:  " ORDER BY username ASC, created_at DESC",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var query strings.Builder
-			AppendSortClause(&query, tt.sorts...)
-			got := query.String()
-
-			if got != tt.want {
-				t.Errorf("AppendSortClause() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestStringifySort(t *testing.T) {
 	t.Parallel()

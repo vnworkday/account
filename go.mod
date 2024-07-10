@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/gookit/goutil v0.6.16
+	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
 	github.com/vnworkday/common v1.0.0
 	github.com/vnworkday/config v1.1.0

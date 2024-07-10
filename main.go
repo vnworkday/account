@@ -1,6 +1,9 @@
 package main
 
-import "github.com/vnworkday/account/cmd/app"
+import (
+	_ "github.com/lib/pq"
+	"github.com/vnworkday/account/cmd/app"
+)
 
 func main() {
 	app.Run()

@@ -7,9 +7,10 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gookit/goutil/structs"
-
+	"github.com/gookit/goutil/arrutil"
 	"github.com/gookit/goutil/reflects"
+	"github.com/gookit/goutil/structs"
+	"github.com/gookit/goutil/strutil"
 
 	"github.com/pkg/errors"
 )
@@ -82,9 +83,30 @@ func (m *MatcherBuilder[T]) ThenDelete() *MutationBuilder[T] {
 	return m.mb
 }
 
-func (m *MatcherBuilder[T]) ThenUpdate(setters ...Setter) *MutationBuilder[T] {
+func (m *MatcherBuilder[T]) ThenUpdate(columns ...string) *MutationBuilder[T] {
 	if m.err != nil {
 		return m.mb
+	}
+
+	setters := arrutil.Map[string, Setter](
+		columns,
+		func(col string) (Setter, bool) {
+			return Setter{
+				Field: col,
+				Value: sourceAlias + "." + col,
+			}, true
+		})
+
+	return m.thenUpdate(setters...)
+}
+
+func (m *MatcherBuilder[T]) thenUpdate(setters ...Setter) *MutationBuilder[T] {
+	if m.err != nil {
+		return m.mb
+	}
+
+	if len(setters) == 0 {
+		return m.ThenDoNothing()
 	}
 
 	if m.matched {
@@ -116,15 +138,36 @@ func (m *MatcherBuilder[T]) ThenUpdate(setters ...Setter) *MutationBuilder[T] {
 
 		m.mb.matchClause.WriteString(setter.Field)
 		m.mb.matchClause.WriteString(" = ")
-		m.mb.matchClause.WriteString("source." + setter.Field)
+		m.mb.matchClause.WriteString(strutil.SafeString(setter.Value))
 	}
 
 	return m.mb
 }
 
-func (m *MatcherBuilder[T]) ThenInsert(setters ...Setter) *MutationBuilder[T] {
+func (m *MatcherBuilder[T]) ThenInsert(columns ...string) *MutationBuilder[T] {
 	if m.err != nil {
 		return m.mb
+	}
+
+	setters := arrutil.Map[string, Setter](
+		columns,
+		func(col string) (Setter, bool) {
+			return Setter{
+				Field: col,
+				Value: sourceAlias + "." + col,
+			}, true
+		})
+
+	return m.thenInsert(setters...)
+}
+
+func (m *MatcherBuilder[T]) thenInsert(setters ...Setter) *MutationBuilder[T] {
+	if m.err != nil {
+		return m.mb
+	}
+
+	if len(setters) == 0 {
+		return m.ThenDoNothing()
 	}
 
 	if m.matched {
@@ -157,7 +200,7 @@ func (m *MatcherBuilder[T]) ThenInsert(setters ...Setter) *MutationBuilder[T] {
 		}
 
 		columns.WriteString(setter.Field)
-		values.WriteString("source." + setter.Field)
+		values.WriteString(strutil.SafeString(setter.Value))
 	}
 
 	m.mb.notMatchClause.WriteString(fmt.Sprintf(" THEN INSERT (%s) VALUES (%s)", columns.String(), values.String()))

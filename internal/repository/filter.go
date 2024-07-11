@@ -22,17 +22,20 @@ func StringifyFilter(filter model.Filter, optAlias ...string) (string, error) {
 		alias = optAlias[0]
 	}
 
-	field, fieldErr := stringifyField(filter.Field, filter.IsCaseSensitive, alias)
+	var field, op, wildcards string
+	var fieldErr, opErr, wildcardsErr error
+
+	field, fieldErr = stringifyField(filter.Field, filter.IsCaseSensitive, alias)
 	if fieldErr != nil {
 		return "", errors.Wrap(fieldErr, "repository: failed to stringify filter field")
 	}
 
-	op, opErr := stringifyFilterOperator(filter.Operator)
+	op, opErr = stringifyOp(filter.Op)
 	if opErr != nil {
 		return "", errors.Wrap(opErr, "repository: failed to stringify filter operator")
 	}
 
-	wildcards, wildcardsErr := buildFilterWildcards(filter.Operator, filter.IsCaseSensitive)
+	wildcards, wildcardsErr = buildFilterWildcards(filter.Op, filter.IsCaseSensitive)
 	if wildcardsErr != nil {
 		return "", errors.Wrap(wildcardsErr, "repository: failed to build filter wildcards")
 	}
@@ -42,35 +45,8 @@ func StringifyFilter(filter model.Filter, optAlias ...string) (string, error) {
 	return strings.TrimSpace(ret), nil
 }
 
-func stringifyFilterOperator(operator model.FilterOperator) (string, error) {
-	operators := map[model.FilterOperator]string{
-		model.Eq:          "=",
-		model.Ne:          "<>",
-		model.Gt:          ">",
-		model.Lt:          "<",
-		model.Ge:          ">=",
-		model.Le:          "<=",
-		model.In:          "IN",
-		model.NotIn:       "NOT IN",
-		model.Contains:    "LIKE",
-		model.NotContains: "NOT LIKE",
-		model.StartsWith:  "LIKE",
-		model.EndsWith:    "LIKE",
-		model.Null:        "IS NULL",
-		model.NotNull:     "IS NOT NULL",
-		model.Between:     "BETWEEN",
-	}
-
-	op, exists := operators[operator]
-	if !exists {
-		return "", errors.Errorf("repository: unsupported filter operator: %d", operator)
-	}
-
-	return op, nil
-}
-
-func buildFilterWildcards(op model.FilterOperator, sensitive bool) (string, error) {
-	wildcards := map[model.FilterOperator]string{
+func buildFilterWildcards(op model.Op, sensitive bool) (string, error) {
+	wildcards := map[model.Op]string{
 		model.Eq:          "?",
 		model.Ne:          "?",
 		model.Gt:          "?",
@@ -110,7 +86,7 @@ func buildFilterWildcards(op model.FilterOperator, sensitive bool) (string, erro
 func castFilterValue(
 	value string,
 	valueType model.FilterValueType,
-	op model.FilterOperator,
+	op model.Op,
 	caseSensitive bool,
 ) (any, error) {
 	switch valueType {
@@ -129,7 +105,7 @@ func castFilterValue(
 	}
 }
 
-func castStringValue(value string, op model.FilterOperator, caseSensitive bool) (any, error) {
+func castStringValue(value string, op model.Op, caseSensitive bool) (any, error) {
 	if caseSensitive {
 		value = strings.ToLower(value)
 	}
@@ -141,7 +117,7 @@ func castStringValue(value string, op model.FilterOperator, caseSensitive bool) 
 	return value, nil
 }
 
-func castIntegerValue(value string, op model.FilterOperator) (any, error) {
+func castIntegerValue(value string, op model.Op) (any, error) {
 	if op == model.In || op == model.NotIn || op == model.Between {
 		values := strings.Split(value, ",")
 
@@ -151,7 +127,7 @@ func castIntegerValue(value string, op model.FilterOperator) (any, error) {
 	return strconv.Atoi(value)
 }
 
-func castFloatValue(value string, op model.FilterOperator) (any, error) {
+func castFloatValue(value string, op model.Op) (any, error) {
 	if op == model.In || op == model.NotIn || op == model.Between {
 		values := strings.Split(value, ",")
 
@@ -161,7 +137,7 @@ func castFloatValue(value string, op model.FilterOperator) (any, error) {
 	return strconv.ParseFloat(value, 64)
 }
 
-func castBooleanValue(value string, op model.FilterOperator) (any, error) {
+func castBooleanValue(value string, op model.Op) (any, error) {
 	if op == model.Between {
 		return nil, errors.Errorf("repository: unsupported filter operator for boolean: %d", op)
 	} else if op == model.In || op == model.NotIn {
@@ -173,7 +149,7 @@ func castBooleanValue(value string, op model.FilterOperator) (any, error) {
 	return strconv.ParseBool(value)
 }
 
-func castTimeValue(value string, valueType model.FilterValueType, op model.FilterOperator) (any, error) {
+func castTimeValue(value string, valueType model.FilterValueType, op model.Op) (any, error) {
 	if op != model.Between {
 		return strutil.ToTime(value, layoutForType(valueType))
 	}

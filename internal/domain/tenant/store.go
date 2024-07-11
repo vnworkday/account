@@ -55,32 +55,18 @@ type store struct {
 }
 
 func (r store) Save(ctx context.Context, tenant *Tenant) error {
-	insertableValues := arrutil.Map[string, repository.Setter](
-		r.insertableColumns,
-		func(col string) (repository.Setter, bool) {
-			return repository.Setter{
-				Field: col,
-				Value: "source." + col,
-			}, true
-		})
-
-	updatableValues := arrutil.Map[string, repository.Setter](
-		r.updatableColumns,
-		func(col string) (repository.Setter, bool) {
-			return repository.Setter{
-				Field: col,
-				Value: "source." + col,
-			}, true
-		})
-
 	_, err := repository.NewMutationBuilder[any]().
 		MergeInto(r.table).
 		Using(tenant).
-		OnRaw("target.id = source.id").
+		On(repository.MergeCondition{
+			SourceCol: "id",
+			TargetCol: "id",
+			Op:        model.Eq,
+		}).
 		WhenMatched().
-		ThenUpdate(updatableValues...).
+		ThenUpdate(r.updatableColumns...).
 		WhenNotMatched().
-		ThenInsert(insertableValues...).
+		ThenInsert(r.insertableColumns...).
 		Exec(ctx, r.db)
 	if err != nil {
 		return err
@@ -94,9 +80,9 @@ func (r store) FindByPublicID(ctx context.Context, publicID string) (*Tenant, er
 		Select(r.allColumns...).
 		From(r.table).
 		Where(model.Filter{
-			Field:    "public_id",
-			Operator: model.Eq,
-			Value:    publicID,
+			Field: "public_id",
+			Op:    model.Eq,
+			Value: publicID,
 		}).
 		Query(ctx, r.db, r.scanTo)
 	if err != nil {

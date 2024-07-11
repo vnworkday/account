@@ -18,10 +18,10 @@ type Sort struct {
 	IsCaseSensitive bool      `json:"is_case_sensitive"`
 }
 
-type FilterOperator int
+type Op int
 
 const (
-	_ FilterOperator = iota
+	_ Op = iota
 	Eq
 	Ne
 	Gt
@@ -53,8 +53,8 @@ const (
 )
 
 type Filter struct {
-	Field           string         `json:"field"`
-	Value           any            `json:"value"`
-	Operator        FilterOperator `json:"operator"`
-	IsCaseSensitive bool           `json:"is_case_sensitive"`
+	Field           string `json:"field"`
+	Value           any    `json:"value"`
+	Op              Op     `json:"op"`
+	IsCaseSensitive bool   `json:"is_case_sensitive"`
 }

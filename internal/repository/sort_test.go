@@ -3,6 +3,7 @@ package repository
 import (
 	"testing"
 
+	"github.com/vnworkday/account/internal/fixture"
 	"github.com/vnworkday/account/internal/model"
 )
 
@@ -82,17 +83,10 @@ func TestStringifySort(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := StringifySort(tt.sort, tt.optAlias...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("StringifySort() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			got, gotErr := StringifySort(tt.sort, tt.optAlias...)
 
-			if tt.wantErr {
-				return
-			}
-
-			if got != tt.want {
-				t.Errorf("StringifySort() got = %v, want %v", got, tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}

@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/vnworkday/account/internal/fixture"
+
 	"github.com/pkg/errors"
 )
 
@@ -34,12 +36,15 @@ func TestMatcherBuilder_ThenDoNothing(t *testing.T) {
 			mb := &MutationBuilder[string]{matchClause: strings.Builder{}, notMatchClause: strings.Builder{}}
 			matcher := NewMatcher(mb, tt.matched).ThenDoNothing()
 
-			if tt.matched && matcher.matchClause.String() != tt.want {
-				t.Errorf("MatchClause = %v, want %v", matcher.matchClause.String(), tt.want)
+			var got string
+			if tt.matched {
+				got = matcher.matchClause.String()
+			} else {
+				got = matcher.notMatchClause.String()
 			}
 
-			if !tt.matched && matcher.notMatchClause.String() != tt.want {
-				t.Errorf("NotMatchClause = %v, want %v", matcher.notMatchClause.String(), tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, false, matcher.err); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -87,16 +92,118 @@ func TestMatcherBuilder_ThenDelete(t *testing.T) {
 
 			matcher.ThenDelete()
 
-			if !tt.wantError {
-				if tt.matched && matcher.mb.matchClause.String() != tt.want {
-					t.Errorf("MatchClause = %v, want %v", matcher.mb.matchClause.String(), tt.want)
-				}
+			var got string
+			if tt.matched {
+				got = matcher.mb.matchClause.String()
+			} else {
+				got = matcher.mb.notMatchClause.String()
+			}
 
-				if !tt.matched && matcher.mb.notMatchClause.String() != tt.want {
-					t.Errorf("NotMatchClause = %v, want %v", matcher.mb.notMatchClause.String(), tt.want)
-				}
-			} else if matcher.err == nil {
-				t.Error("Expected error, got nil")
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, matcher.err); err != nil {
+				t.Error(err)
+			}
+		})
+	}
+}
+
+func TestMatcherBuilder_ThenUpdateOrInsert_Columns(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		matched    bool
+		columns    []string
+		want       string
+		wantError  bool
+		thenAction string
+	}{
+		{
+			name:       "ThenUpdate With Matched And Single Column",
+			matched:    true,
+			columns:    []string{"name"},
+			want:       " THEN UPDATE SET name = source.name",
+			wantError:  false,
+			thenAction: matchActionUpdate,
+		},
+		{
+			name:       "ThenUpdate With Matched And Multiple Columns",
+			matched:    true,
+			columns:    []string{"name", "age"},
+			want:       " THEN UPDATE SET name = source.name, age = source.age",
+			wantError:  false,
+			thenAction: matchActionUpdate,
+		},
+		{
+			name:       "ThenUpdate With Not Matched",
+			matched:    false,
+			columns:    []string{"name"},
+			want:       "",
+			wantError:  true,
+			thenAction: matchActionUpdate,
+		},
+		{
+			name:       "ThenUpdate With Matched And No Columns",
+			matched:    true,
+			columns:    []string{},
+			want:       " THEN DO NOTHING",
+			wantError:  false,
+			thenAction: matchActionUpdate,
+		},
+		{
+			name:       "ThenInsert With Matched And Single Column",
+			matched:    false,
+			columns:    []string{"name"},
+			want:       " THEN INSERT (name) VALUES (source.name)",
+			wantError:  false,
+			thenAction: "insert",
+		},
+		{
+			name:       "ThenInsert With Matched And Multiple Columns",
+			matched:    false,
+			columns:    []string{"name", "age"},
+			want:       " THEN INSERT (name, age) VALUES (source.name, source.age)",
+			wantError:  false,
+			thenAction: "insert",
+		},
+		{
+			name:       "ThenInsert With Matched",
+			matched:    true,
+			columns:    []string{"name"},
+			want:       "",
+			wantError:  true,
+			thenAction: "insert",
+		},
+		{
+			name:       "ThenInsert With Matched And No Columns",
+			matched:    false,
+			columns:    []string{},
+			want:       " THEN DO NOTHING",
+			wantError:  false,
+			thenAction: "insert",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			mb := &MutationBuilder[string]{matchClause: strings.Builder{}, notMatchClause: strings.Builder{}}
+
+			if tt.thenAction == matchActionUpdate {
+				mb = NewMatcher(mb, tt.matched).ThenUpdate(tt.columns...)
+			} else {
+				mb = NewMatcher(mb, tt.matched).ThenInsert(tt.columns...)
+			}
+
+			var got string
+			if tt.thenAction == matchActionUpdate {
+				got = mb.matchClause.String()
+			} else {
+				got = mb.notMatchClause.String()
+			}
+
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, mb.err); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -114,31 +221,31 @@ func TestMatcherBuilder_ThenUpdateOrInsert(t *testing.T) {
 		thenAction string
 	}{
 		{
-			name:       "ThenUpdate Matched Single Setter",
+			name:       "thenUpdate Matched Single Setter",
 			matched:    true,
 			setters:    []Setter{{Field: "name", Value: "source.name"}},
 			want:       " THEN UPDATE SET name = source.name",
 			wantError:  false,
-			thenAction: "update",
+			thenAction: matchActionUpdate,
 		},
 		{
-			name:       "ThenUpdate Matched Multiple Setters",
+			name:       "thenUpdate Matched Multiple Setters",
 			matched:    true,
 			setters:    []Setter{{Field: "name", Value: "source.name"}, {Field: "age", Value: "source.age"}},
 			want:       " THEN UPDATE SET name = source.name, age = source.age",
 			wantError:  false,
-			thenAction: "update",
+			thenAction: matchActionUpdate,
 		},
 		{
-			name:       "ThenUpdate NotMatched",
+			name:       "thenUpdate NotMatched",
 			matched:    false,
 			setters:    []Setter{{Field: "name", Value: "source.name"}},
 			want:       "",
 			wantError:  true,
-			thenAction: "update",
+			thenAction: matchActionUpdate,
 		},
 		{
-			name:       "ThenInsert NotMatched Single Setter",
+			name:       "thenInsert NotMatched Single Setter",
 			matched:    false,
 			setters:    []Setter{{Field: "name", Value: "source.name"}},
 			want:       " THEN INSERT (name) VALUES (source.name)",
@@ -146,7 +253,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert(t *testing.T) {
 			thenAction: "insert",
 		},
 		{
-			name:       "ThenInsert NotMatched Multiple Setters",
+			name:       "thenInsert NotMatched Multiple Setters",
 			matched:    false,
 			setters:    []Setter{{Field: "name", Value: "source.name"}, {Field: "age", Value: "source.age"}},
 			want:       " THEN INSERT (name, age) VALUES (source.name, source.age)",
@@ -154,7 +261,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert(t *testing.T) {
 			thenAction: "insert",
 		},
 		{
-			name:       "ThenInsert Matched Error",
+			name:       "thenInsert Matched Error",
 			matched:    true,
 			setters:    []Setter{{Field: "name", Value: "source.name"}},
 			want:       "",
@@ -169,27 +276,21 @@ func TestMatcherBuilder_ThenUpdateOrInsert(t *testing.T) {
 
 			mb := &MutationBuilder[string]{matchClause: strings.Builder{}, notMatchClause: strings.Builder{}}
 
-			if tt.thenAction == "update" {
-				mb = NewMatcher(mb, tt.matched).ThenUpdate(tt.setters...)
+			if tt.thenAction == matchActionUpdate {
+				mb = NewMatcher(mb, tt.matched).thenUpdate(tt.setters...)
 			} else {
-				mb = NewMatcher(mb, tt.matched).ThenInsert(tt.setters...)
+				mb = NewMatcher(mb, tt.matched).thenInsert(tt.setters...)
 			}
 
-			if !tt.wantError {
-				var got string
-				if tt.thenAction == "update" {
-					got = mb.matchClause.String()
-				} else {
-					got = mb.notMatchClause.String()
-				}
-
-				if got != tt.want {
-					t.Errorf("got:\n%v\nwant:\n%v", got, tt.want)
-				}
+			var got string
+			if tt.thenAction == matchActionUpdate {
+				got = mb.matchClause.String()
+			} else {
+				got = mb.notMatchClause.String()
 			}
 
-			if tt.wantError && mb.err == nil {
-				t.Error("Expected error, got nil")
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, mb.err); err != nil {
+				t.Error(err)
 			}
 		})
 	}

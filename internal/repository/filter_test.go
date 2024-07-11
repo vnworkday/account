@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vnworkday/account/internal/fixture"
 	"github.com/vnworkday/account/internal/model"
 )
 
@@ -22,7 +23,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "SimpleEqualityFilterWithoutAlias",
 			filter: model.Filter{
 				Field:           "username",
-				Operator:        model.Eq,
+				Op:              model.Eq,
 				Value:           "john_doe",
 				IsCaseSensitive: false,
 			},
@@ -33,7 +34,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "SensitiveContainsFilterWithAlias",
 			filter: model.Filter{
 				Field:           "email",
-				Operator:        model.Contains,
+				Op:              model.Contains,
 				Value:           "@example.com",
 				IsCaseSensitive: true,
 			},
@@ -45,7 +46,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "InvalidOperator",
 			filter: model.Filter{
 				Field:           "status",
-				Operator:        model.FilterOperator(999),
+				Op:              model.Op(999),
 				Value:           "active",
 				IsCaseSensitive: false,
 			},
@@ -55,7 +56,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "EmptyFieldName",
 			filter: model.Filter{
 				Field:           "",
-				Operator:        model.Eq,
+				Op:              model.Eq,
 				Value:           "value",
 				IsCaseSensitive: false,
 			},
@@ -65,7 +66,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "NullValueWithAlias",
 			filter: model.Filter{
 				Field:           "deleted_at",
-				Operator:        model.Null,
+				Op:              model.Null,
 				IsCaseSensitive: false,
 			},
 			optAlias: []string{"users"},
@@ -76,7 +77,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "InsensitiveStartsWithFilterWithoutAlias",
 			filter: model.Filter{
 				Field:           "name",
-				Operator:        model.StartsWith,
+				Op:              model.StartsWith,
 				Value:           "John",
 				IsCaseSensitive: false,
 			},
@@ -87,7 +88,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "SensitiveEndsWithFilterWithAlias",
 			filter: model.Filter{
 				Field:           "email",
-				Operator:        model.EndsWith,
+				Op:              model.EndsWith,
 				Value:           "@example.com",
 				IsCaseSensitive: true,
 			},
@@ -99,7 +100,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "InOperatorWithMultipleValues",
 			filter: model.Filter{
 				Field:           "status",
-				Operator:        model.In,
+				Op:              model.In,
 				Value:           "active,inactive",
 				IsCaseSensitive: false,
 			},
@@ -110,7 +111,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "NotInOperatorSensitiveWithAlias",
 			filter: model.Filter{
 				Field:           "type",
-				Operator:        model.NotIn,
+				Op:              model.NotIn,
 				Value:           "admin,user",
 				IsCaseSensitive: true,
 			},
@@ -122,7 +123,7 @@ func TestStringifyFilter(t *testing.T) {
 			name: "UnsupportedValueType",
 			filter: model.Filter{
 				Field:           "created_at",
-				Operator:        model.Eq,
+				Op:              model.Eq,
 				Value:           "2023-01-01",
 				IsCaseSensitive: false,
 			},
@@ -135,136 +136,10 @@ func TestStringifyFilter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := StringifyFilter(tt.filter, tt.optAlias...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("StringifyFilter() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			got, gotErr := StringifyFilter(tt.filter, tt.optAlias...)
 
-			if !tt.wantErr && got != tt.want {
-				t.Errorf("StringifyFilter() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestStringifyFilterOperator(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		operator model.FilterOperator
-		want     string
-		wantErr  bool
-	}{
-		{
-			name:     "EqualityOperator",
-			operator: model.Eq,
-			want:     "=",
-			wantErr:  false,
-		},
-		{
-			name:     "NotEqualOperator",
-			operator: model.Ne,
-			want:     "<>",
-			wantErr:  false,
-		},
-		{
-			name:     "GreaterThanOperator",
-			operator: model.Gt,
-			want:     ">",
-			wantErr:  false,
-		},
-		{
-			name:     "LessThanOperator",
-			operator: model.Lt,
-			want:     "<",
-			wantErr:  false,
-		},
-		{
-			name:     "GreaterThanOrEqualOperator",
-			operator: model.Ge,
-			want:     ">=",
-			wantErr:  false,
-		},
-		{
-			name:     "LessThanOrEqualOperator",
-			operator: model.Le,
-			want:     "<=",
-			wantErr:  false,
-		},
-		{
-			name:     "InOperator",
-			operator: model.In,
-			want:     "IN",
-			wantErr:  false,
-		},
-		{
-			name:     "NotInOperator",
-			operator: model.NotIn,
-			want:     "NOT IN",
-			wantErr:  false,
-		},
-		{
-			name:     "ContainsOperator",
-			operator: model.Contains,
-			want:     "LIKE",
-			wantErr:  false,
-		},
-		{
-			name:     "NotContainsOperator",
-			operator: model.NotContains,
-			want:     "NOT LIKE",
-			wantErr:  false,
-		},
-		{
-			name:     "StartsWithOperator",
-			operator: model.StartsWith,
-			want:     "LIKE",
-			wantErr:  false,
-		},
-		{
-			name:     "EndsWithOperator",
-			operator: model.EndsWith,
-			want:     "LIKE",
-			wantErr:  false,
-		},
-		{
-			name:     "NullOperator",
-			operator: model.Null,
-			want:     "IS NULL",
-			wantErr:  false,
-		},
-		{
-			name:     "NotNullOperator",
-			operator: model.NotNull,
-			want:     "IS NOT NULL",
-			wantErr:  false,
-		},
-		{
-			name:     "BetweenOperator",
-			operator: model.Between,
-			want:     "BETWEEN",
-			wantErr:  false,
-		},
-		{
-			name:     "UnsupportedOperator",
-			operator: model.FilterOperator(999),
-			want:     "",
-			wantErr:  true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			got, err := stringifyFilterOperator(tt.operator)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("stringifyFilterOperator() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			if !tt.wantErr && got != tt.want {
-				t.Errorf("stringifyFilterOperator() got = %v, want %v", got, tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -275,7 +150,7 @@ func TestBuildFilterWildcards(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		op        model.FilterOperator
+		op        model.Op
 		sensitive bool
 		want      string
 		wantErr   bool
@@ -324,7 +199,7 @@ func TestBuildFilterWildcards(t *testing.T) {
 		},
 		{
 			name:      "UnsupportedOperator",
-			op:        model.FilterOperator(999),
+			op:        model.Op(999),
 			sensitive: false,
 			want:      "",
 			wantErr:   true,
@@ -349,13 +224,10 @@ func TestBuildFilterWildcards(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := buildFilterWildcards(tt.op, tt.sensitive)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("buildFilterWildcards() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			got, gotErr := buildFilterWildcards(tt.op, tt.sensitive)
 
-			if !tt.wantErr && got != tt.want {
-				t.Errorf("buildFilterWildcards() got = %v, want %v", got, tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -368,7 +240,7 @@ func TestCastFilterValue(t *testing.T) {
 		name          string
 		value         string
 		valueType     model.FilterValueType
-		op            model.FilterOperator
+		op            model.Op
 		want          any
 		wantErr       bool
 		caseSensitive bool
@@ -468,13 +340,10 @@ func TestCastFilterValue(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := castFilterValue(tt.value, tt.valueType, tt.op, tt.caseSensitive)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("castFilterValue() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			got, gotErr := castFilterValue(tt.value, tt.valueType, tt.op, tt.caseSensitive)
 
-			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("castFilterValue() got = %v, want %v", got, tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -486,7 +355,7 @@ func TestCastStringValue(t *testing.T) {
 	tests := []struct {
 		name          string
 		value         string
-		op            model.FilterOperator
+		op            model.Op
 		want          any
 		wantErr       bool
 		caseSensitive bool
@@ -533,17 +402,10 @@ func TestCastStringValue(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := castStringValue(tt.value, tt.op, tt.caseSensitive)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("castStringValue() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			got, gotErr := castStringValue(tt.value, tt.op, tt.caseSensitive)
 
-			if tt.wantErr {
-				return
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("castTimeValue() got = %v, want %v", got, tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -555,7 +417,7 @@ func TestCastNumericValue(t *testing.T) {
 	tests := []struct {
 		name      string
 		value     string
-		op        model.FilterOperator
+		op        model.Op
 		want      any
 		wantErr   bool
 		valueType reflect.Kind
@@ -735,33 +597,21 @@ func TestCastNumericValue(t *testing.T) {
 			t.Parallel()
 
 			var got any
-			var err error
-			var funcN string
+			var gotErr error
 
 			switch tt.valueType {
 			case reflect.Float64:
-				got, err = castFloatValue(tt.value, tt.op)
-				funcN = "castFloatValue"
+				got, gotErr = castFloatValue(tt.value, tt.op)
 			case reflect.Int:
-				got, err = castIntegerValue(tt.value, tt.op)
-				funcN = "castIntegerValue"
+				got, gotErr = castIntegerValue(tt.value, tt.op)
 			case reflect.Bool:
-				got, err = castBooleanValue(tt.value, tt.op)
-				funcN = "castBooleanValue"
+				got, gotErr = castBooleanValue(tt.value, tt.op)
 			default:
 				t.Errorf("unsupported value type: %v", tt.valueType)
 			}
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s() error = %v, wantErr %v", funcN, err, tt.wantErr)
-			}
-
-			if tt.wantErr {
-				return
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("castTimeValue() got = %v, want %v", got, tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -774,7 +624,7 @@ func TestCastTimeValue(t *testing.T) {
 		name      string
 		value     string
 		valueType model.FilterValueType
-		operator  model.FilterOperator
+		operator  model.Op
 		want      any
 		wantErr   bool
 	}{
@@ -980,33 +830,21 @@ func TestConvertSliceToNumeric(t *testing.T) {
 			t.Parallel()
 
 			var got any
-			var err error
-			var funcN string
+			var gotErr error
 
 			switch tt.valueType {
 			case reflect.Int:
-				got, err = convertSliceToInt(tt.values)
-				funcN = "convertSliceToInt"
+				got, gotErr = convertSliceToInt(tt.values)
 			case reflect.Float64:
-				got, err = convertSliceToFloat(tt.values)
-				funcN = "convertSliceToFloat"
+				got, gotErr = convertSliceToFloat(tt.values)
 			case reflect.Bool:
-				got, err = convertSliceToBool(tt.values)
-				funcN = "convertSliceToBool"
+				got, gotErr = convertSliceToBool(tt.values)
 			default:
 				t.Errorf("unsupported type: " + tt.valueType.String())
 			}
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s() error = %v, wantErr %v", funcN, err, tt.wantErr)
-			}
-
-			if tt.wantErr {
-				return
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("%s() got = %v, want %v", funcN, got, tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -1061,17 +899,10 @@ func TestConvertSliceToDate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := convertSliceToDate(tt.values, tt.layout)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("convertSliceToDate() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			got, gotErr := convertSliceToDate(tt.values, tt.layout)
 
-			if tt.wantErr {
-				return
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("convertSliceToDate() got = %v, want %v", got, tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}

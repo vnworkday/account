@@ -7,10 +7,26 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/vnworkday/account/internal/model"
+
 	"github.com/gookit/goutil/reflects"
 
 	"github.com/pkg/errors"
 )
+
+const (
+	sourceAlias = "source"
+	targetAlias = "target"
+
+	matchActionUpdate = "update"
+)
+
+type MergeCondition struct {
+	SourceCol       string
+	TargetCol       string
+	Op              model.Op
+	IsCaseSensitive bool
+}
 
 type MutationBuilder[T any] struct {
 	query          string
@@ -41,7 +57,7 @@ func (b *MutationBuilder[T]) MergeInto(table string) *MutationBuilder[T] {
 
 	targetTable := table
 
-	b.mergeClause = fmt.Sprintf("MERGE INTO %s AS target", targetTable)
+	b.mergeClause = fmt.Sprintf("MERGE INTO %s AS %s", targetTable, targetAlias)
 
 	return b
 }
@@ -90,8 +106,9 @@ func (b *MutationBuilder[T]) UsingValues(values ...Setter) *MutationBuilder[T] {
 		vals = append(vals, setter.Value)
 	}
 
-	b.usingClause = fmt.Sprintf("USING (VALUES (%s)) AS source (%s)",
+	b.usingClause = fmt.Sprintf("USING (VALUES (%s)) AS %s (%s)",
 		strings.Join(wildcards, ", "),
+		sourceAlias,
 		strings.Join(keys, ", "),
 	)
 
@@ -99,6 +116,40 @@ func (b *MutationBuilder[T]) UsingValues(values ...Setter) *MutationBuilder[T] {
 	b.usingArgValues = vals
 
 	return b
+}
+
+func (b *MutationBuilder[T]) On(mergeCond MergeCondition) *MutationBuilder[T] {
+	if b.err != nil {
+		return b
+	}
+
+	var src, op, target string
+	var srcErr, opErr, targetErr error
+
+	src, srcErr = stringifyField(mergeCond.SourceCol, mergeCond.IsCaseSensitive, sourceAlias)
+	if srcErr != nil {
+		b.err = errors.Wrap(srcErr, "repository: failed to stringify merge condition source")
+
+		return b
+	}
+
+	target, targetErr = stringifyField(mergeCond.TargetCol, mergeCond.IsCaseSensitive, "target")
+	if targetErr != nil {
+		b.err = errors.Wrap(targetErr, "repository: failed to stringify merge condition target")
+
+		return b
+	}
+
+	op, opErr = stringifyOp(mergeCond.Op)
+	if opErr != nil {
+		b.err = errors.Wrap(opErr, "repository: failed to stringify merge condition operator")
+
+		return b
+	}
+
+	raw := fmt.Sprintf("%s %s %s", src, op, target)
+
+	return b.OnRaw(raw)
 }
 
 func (b *MutationBuilder[T]) OnRaw(mergeCond string) *MutationBuilder[T] {

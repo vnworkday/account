@@ -1,8 +1,10 @@
 package repository
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/vnworkday/account/internal/fixture"
+	"github.com/vnworkday/account/internal/model"
 
 	"github.com/pkg/errors"
 )
@@ -36,18 +38,11 @@ func TestMutationBuilder_MergeInto(t *testing.T) {
 			builder := NewMutationBuilder[string]()
 			gotBuilder := builder.MergeInto(tt.table)
 
-			if tt.wantError {
-				if gotBuilder.err == nil {
-					t.Errorf("Expected an error but got nil")
-				}
-			} else {
-				if gotBuilder.err != nil {
-					t.Errorf("Did not expect an error but got one: %v", gotBuilder.err)
-				}
+			got := gotBuilder.mergeClause
+			gotErr := gotBuilder.err
 
-				if gotBuilder.mergeClause != tt.want {
-					t.Errorf("MergeClause = %v, want %v", gotBuilder.mergeClause, tt.want)
-				}
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -57,76 +52,90 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name            string
-		setters         []Setter
-		wantUsingClause string
-		wantArgKeys     []string
-		wantArgValues   []any
-		wantError       bool
+		name      string
+		setters   []Setter
+		want      map[string]any
+		wantError bool
 	}{
 		{
-			name:            "UsingValues With Single Setter",
-			setters:         []Setter{{Field: "name", Value: "John Doe"}},
-			wantUsingClause: "USING (VALUES (?)) AS source (name)",
-			wantArgKeys:     []string{"name"},
-			wantArgValues:   []any{"John Doe"},
-			wantError:       false,
+			name:    "UsingValues With Single Setter",
+			setters: []Setter{{Field: "name", Value: "John Doe"}},
+			want: map[string]any{
+				"clause": "USING (VALUES (?)) AS source (name)",
+				"keys":   []string{"name"},
+				"values": []any{"John Doe"},
+			},
+			wantError: false,
 		},
 		{
-			name:            "UsingValues With Multiple Setters",
-			setters:         []Setter{{Field: "name", Value: "John Doe"}, {Field: "age", Value: 30}},
-			wantUsingClause: "USING (VALUES (?, ?)) AS source (name, age)",
-			wantArgKeys:     []string{"name", "age"},
-			wantArgValues:   []any{"John Doe", 30},
-			wantError:       false,
+			name:    "UsingValues With Multiple Setters",
+			setters: []Setter{{Field: "name", Value: "John Doe"}, {Field: "age", Value: 30}},
+			want: map[string]any{
+				"clause": "USING (VALUES (?, ?)) AS source (name, age)",
+				"keys":   []string{"name", "age"},
+				"values": []any{"John Doe", 30},
+			},
+			wantError: false,
 		},
 		{
-			name:            "UsingValues With No Setters",
-			setters:         []Setter{},
-			wantUsingClause: "",
-			wantArgKeys:     []string{},
-			wantArgValues:   []any{},
-			wantError:       true,
+			name:    "UsingValues With No Setters",
+			setters: []Setter{},
+			want: map[string]any{
+				"clause": "",
+				"keys":   []string{},
+				"values": []any{},
+			},
+			wantError: true,
 		},
 		{
-			name:            "UsingValues With Nil Setters",
-			setters:         nil,
-			wantUsingClause: "",
-			wantArgKeys:     []string{},
-			wantArgValues:   []any{},
-			wantError:       true,
+			name:    "UsingValues With Nil Setters",
+			setters: nil,
+			want: map[string]any{
+				"clause": "",
+				"keys":   []string{},
+				"values": []any{},
+			},
+			wantError: true,
 		},
 		{
-			name:            "UsingValues With Complex Value",
-			setters:         []Setter{{Field: "data", Value: map[string]any{"key": "value"}}},
-			wantUsingClause: "USING (VALUES (?)) AS source (data)",
-			wantArgKeys:     []string{"data"},
-			wantArgValues:   []any{map[string]any{"key": "value"}},
-			wantError:       false,
+			name:    "UsingValues With Complex Value",
+			setters: []Setter{{Field: "data", Value: map[string]any{"key": "value"}}},
+			want: map[string]any{
+				"clause": "USING (VALUES (?)) AS source (data)",
+				"keys":   []string{"data"},
+				"values": []any{map[string]any{"key": "value"}},
+			},
+			wantError: false,
 		},
 		{
-			name:            "UsingValues With Setter Having Empty Field",
-			setters:         []Setter{{Field: "", Value: "John Doe"}},
-			wantUsingClause: "",
-			wantArgKeys:     []string{},
-			wantArgValues:   []any{},
-			wantError:       true,
+			name:    "UsingValues With Setter Having Empty Field",
+			setters: []Setter{{Field: "", Value: "John Doe"}},
+			want: map[string]any{
+				"clause": "",
+				"keys":   []string{},
+				"values": []any{},
+			},
+			wantError: true,
 		},
 		{
-			name:            "UsingValues With Setter Having Nil Value",
-			setters:         []Setter{{Field: "name", Value: nil}},
-			wantUsingClause: "USING (VALUES (?)) AS source (name)",
-			wantArgKeys:     []string{"name"},
-			wantArgValues:   []any{nil},
-			wantError:       false,
+			name:    "UsingValues With Setter Having Nil Value",
+			setters: []Setter{{Field: "name", Value: nil}},
+			want: map[string]any{
+				"clause": "USING (VALUES (?)) AS source (name)",
+				"keys":   []string{"name"},
+				"values": []any{nil},
+			},
+			wantError: false,
 		},
 		{
-			name:            "UsingValues With Multiple Setters Including Empty Field",
-			setters:         []Setter{{Field: "name", Value: "John Doe"}, {Field: "", Value: 30}},
-			wantUsingClause: "",
-			wantArgKeys:     []string{},
-			wantArgValues:   []any{},
-			wantError:       true,
+			name:    "UsingValues With Multiple Setters Including Empty Field",
+			setters: []Setter{{Field: "name", Value: "John Doe"}, {Field: "", Value: 30}},
+			want: map[string]any{
+				"clause": "",
+				"keys":   []string{},
+				"values": []any{},
+			},
+			wantError: true,
 		},
 	}
 
@@ -137,28 +146,98 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 			builder := NewMutationBuilder[string]()
 			gotBuilder := builder.UsingValues(tt.setters...)
 
-			if tt.wantError {
-				if gotBuilder.err == nil {
-					t.Errorf("Expected an error but got nil")
-				}
-
-				return
+			got := map[string]any{
+				"clause": gotBuilder.usingClause,
+				"keys":   gotBuilder.usingArgKeys,
+				"values": gotBuilder.usingArgValues,
 			}
+			gotErr := gotBuilder.err
 
-			if gotBuilder.err != nil {
-				t.Errorf("Did not expect an error but got one: %v", gotBuilder.err)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
+				t.Error(err)
 			}
+		})
+	}
+}
 
-			if gotBuilder.usingClause != tt.wantUsingClause {
-				t.Errorf("UsingClause = %v, want %v", gotBuilder.usingClause, tt.wantUsingClause)
-			}
+func TestMutationBuilder_On(t *testing.T) {
+	t.Parallel()
 
-			if !reflect.DeepEqual(gotBuilder.usingArgKeys, tt.wantArgKeys) {
-				t.Errorf("UsingArgKeys = %v, want %v", gotBuilder.usingArgKeys, tt.wantArgKeys)
-			}
+	tests := []struct {
+		name      string
+		mergeCond MergeCondition
+		want      string
+		wantError bool
+	}{
+		{
+			name: "On With Valid Condition",
+			mergeCond: MergeCondition{
+				SourceCol:       "id",
+				TargetCol:       "id",
+				Op:              model.Eq,
+				IsCaseSensitive: false,
+			},
+			want:      "ON source.id = target.id",
+			wantError: false,
+		},
+		{
+			name: "On With Case Sensitive Condition",
+			mergeCond: MergeCondition{
+				SourceCol:       "name",
+				TargetCol:       "name",
+				Op:              model.Eq,
+				IsCaseSensitive: true,
+			},
+			want:      "ON LOWER(source.name) = LOWER(target.name)",
+			wantError: false,
+		},
+		{
+			name: "On With Invalid Operator",
+			mergeCond: MergeCondition{
+				SourceCol:       "id",
+				TargetCol:       "id",
+				Op:              model.Op(999),
+				IsCaseSensitive: false,
+			},
+			want:      "",
+			wantError: true,
+		},
+		{
+			name: "On With Empty Source Column",
+			mergeCond: MergeCondition{
+				SourceCol:       "",
+				TargetCol:       "id",
+				Op:              model.Eq,
+				IsCaseSensitive: false,
+			},
+			want:      "",
+			wantError: true,
+		},
+		{
+			name: "On With Empty Target Column",
+			mergeCond: MergeCondition{
+				SourceCol:       "id",
+				TargetCol:       "",
+				Op:              model.Eq,
+				IsCaseSensitive: false,
+			},
+			want:      "",
+			wantError: true,
+		},
+	}
 
-			if !reflect.DeepEqual(gotBuilder.usingArgValues, tt.wantArgValues) {
-				t.Errorf("UsingArgValues = %v, want %v", gotBuilder.usingArgValues, tt.wantArgValues)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			builder := NewMutationBuilder[string]()
+			gotBuilder := builder.On(tt.mergeCond)
+
+			got := gotBuilder.onClause.String()
+			gotErr := gotBuilder.err
+
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -168,34 +247,34 @@ func TestMutationBuilder_OnRaw(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name         string
-		mergeCond    string
-		wantOnClause string
-		wantError    bool
+		name      string
+		mergeCond string
+		want      string
+		wantError bool
 	}{
 		{
-			name:         "OnRaw With Valid Condition",
-			mergeCond:    "target.id = source.id",
-			wantOnClause: "ON target.id = source.id",
-			wantError:    false,
+			name:      "OnRaw With Valid Condition",
+			mergeCond: "target.id = source.id",
+			want:      "ON target.id = source.id",
+			wantError: false,
 		},
 		{
-			name:         "OnRaw With Empty Condition",
-			mergeCond:    "",
-			wantOnClause: "ON ",
-			wantError:    true,
+			name:      "OnRaw With Empty Condition",
+			mergeCond: "",
+			want:      "ON ",
+			wantError: true,
 		},
 		{
-			name:         "OnRaw With Multiple Calls",
-			mergeCond:    "target.id = source.id AND target.name = source.name",
-			wantOnClause: "ON target.id = source.id AND target.name = source.name",
-			wantError:    false,
+			name:      "OnRaw With Multiple Calls",
+			mergeCond: "target.id = source.id AND target.name = source.name",
+			want:      "ON target.id = source.id AND target.name = source.name",
+			wantError: false,
 		},
 		{
-			name:         "OnRaw With Special Characters",
-			mergeCond:    "target.name = 'O\\'Reilly'",
-			wantOnClause: "ON target.name = 'O\\'Reilly'",
-			wantError:    false,
+			name:      "OnRaw With Special Characters",
+			mergeCond: "target.name = 'O\\'Reilly'",
+			want:      "ON target.name = 'O\\'Reilly'",
+			wantError: false,
 		},
 	}
 
@@ -206,18 +285,11 @@ func TestMutationBuilder_OnRaw(t *testing.T) {
 			builder := NewMutationBuilder[string]()
 			gotBuilder := builder.OnRaw(tt.mergeCond)
 
-			if tt.wantError {
-				if gotBuilder.err == nil {
-					t.Error("Expected an error but got nil")
-				}
-			} else {
-				if gotBuilder.err != nil {
-					t.Errorf("Did not expect an error but got one: %v", gotBuilder.err)
-				}
+			got := gotBuilder.onClause.String()
+			gotErr := gotBuilder.err
 
-				if gotBuilder.onClause.String() != tt.wantOnClause {
-					t.Errorf("OnClause = %v, want %v", gotBuilder.onClause.String(), tt.wantOnClause)
-				}
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -296,9 +368,6 @@ func TestMutationBuilder_WhenMatchedOrNot(t *testing.T) {
 			t.Parallel()
 
 			builder := NewMutationBuilder[string]()
-			if tt.wantError {
-				builder.err = errors.New("forced error")
-			}
 
 			var gotBuilder *MatcherBuilder[string]
 
@@ -309,27 +378,20 @@ func TestMutationBuilder_WhenMatchedOrNot(t *testing.T) {
 			}
 
 			if tt.wantError {
-				if gotBuilder.err == nil {
-					t.Error("Expected an error but got nil")
-				}
-
-				return
-			}
-
-			if gotBuilder.err != nil {
-				t.Errorf("Did not expect an error but got one: %v", gotBuilder.err)
+				gotBuilder.err = errors.New("forced error")
 			}
 
 			var got string
+			gotErr := gotBuilder.err
 
-			if tt.matched {
-				got = gotBuilder.mb.matchClause.String()
-			} else {
+			if !tt.matched {
 				got = gotBuilder.mb.notMatchClause.String()
+			} else {
+				got = gotBuilder.mb.matchClause.String()
 			}
 
-			if got != tt.want {
-				t.Errorf("got = %v, want %v", got, tt.want)
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -487,20 +549,10 @@ func TestMutationBuilder_Build(t *testing.T) {
 			builder := NewMutationBuilder[string]()
 			tt.setup(builder)
 
-			query, err := builder.build()
+			got, gotErr := builder.build()
 
-			if tt.wantError {
-				if err == nil {
-					t.Errorf("Expected error %v, got %v", tt.wantError, err)
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("Unexpected error: %v", err)
-				}
-
-				if query != tt.want {
-					t.Errorf("Expected query to be:\n%v\ngot:\n%v", tt.want, query)
-				}
+			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
+				t.Error(err)
 			}
 		})
 	}

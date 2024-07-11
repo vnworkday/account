@@ -3,6 +3,7 @@ package tenant
 import (
 	"context"
 	"database/sql"
+
 	"go.uber.org/fx"
 
 	"github.com/google/uuid"
@@ -24,7 +25,6 @@ type StoreParams struct {
 
 func NewStore(params StoreParams) (Store, error) {
 	table, err := model.StructToTable(Tenant{}, "tenant`")
-
 	if err != nil {
 		return nil, err
 	}

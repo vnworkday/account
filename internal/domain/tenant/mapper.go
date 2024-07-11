@@ -24,25 +24,25 @@ func NewMapper(_ MapperParams) Mapper {
 
 func (m mapper) ToTenantForCreate(request *tenantv1.CreateTenantRequest) *CreateTenantRequest {
 	return &CreateTenantRequest{
-		Name:                    request.Name,
-		Domain:                  request.Domain,
-		Timezone:                request.Timezone,
-		SubscriptionType:        int(request.SubscriptionType),
-		SelfRegistrationEnabled: request.SelfRegistrationEnabled,
+		Name:                    request.GetName(),
+		Domain:                  request.GetDomain(),
+		Timezone:                request.GetTimezone(),
+		SubscriptionType:        int(request.GetSubscriptionType()),
+		SelfRegistrationEnabled: request.GetSelfRegistrationEnabled(),
 	}
 }
 
 func (m mapper) ToTenantForUpdate(request *tenantv1.UpdateTenantRequest) *UpdateTenantRequest {
 	return &UpdateTenantRequest{
-		ID:                      uuid.MustParse(request.Id),
-		Name:                    request.Name,
-		SubscriptionType:        int(request.SubscriptionType),
-		SelfRegistrationEnabled: request.SelfRegistrationEnabled,
+		ID:                      uuid.MustParse(request.GetId()),
+		Name:                    request.GetName(),
+		SubscriptionType:        int(request.GetSubscriptionType()),
+		SelfRegistrationEnabled: request.GetSelfRegistrationEnabled(),
 	}
 }
 
 func (m mapper) ToTenantForGet(request *tenantv1.GetTenantRequest) *GetTenantRequest {
 	return &GetTenantRequest{
-		ID: uuid.MustParse(request.Id),
+		ID: uuid.MustParse(request.GetId()),
 	}
 }

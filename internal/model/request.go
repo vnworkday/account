@@ -1,5 +1,11 @@
 package model
 
+type ListRequest struct {
+	Pagination Pagination
+	Filters    []Filter
+	Sorts      []Sort
+}
+
 type Pagination struct {
 	Offset int `json:"offset"`
 	Limit  int `json:"limit"`

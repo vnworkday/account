@@ -1,25 +1,27 @@
 package tenant
 
-import "github.com/vnworkday/account/internal/model"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/vnworkday/account/internal/model"
+)
 
 type Tenant struct {
-	ID                      string `json:"id"`
-	PublicID                string `json:"public_id"`
-	Name                    string `json:"name"`
-	State                   int    `json:"state"`
-	Domain                  string `json:"domain"`
-	Timezone                string `json:"timezone"`
-	ProductionType          int    `json:"production_type"`
-	SubscriptionType        int    `json:"subscription_type"`
-	SelfRegistrationEnabled bool   `json:"self_registration_enabled"`
-	CreatedAt               string `json:"created_at"`
-	UpdatedAt               string `json:"updated_at"`
+	ID                      uuid.UUID `db:"id"                        json:"id"`
+	Name                    string    `db:"name"                      json:"name"`
+	State                   int       `db:"state"                     json:"state"`
+	Domain                  string    `db:"domain"                    json:"domain"`
+	Timezone                string    `db:"timezone"                  json:"timezone"`
+	ProductionType          int       `db:"production_type"           json:"production_type"`
+	SubscriptionType        int       `db:"subscription_type"         json:"subscription_type"`
+	SelfRegistrationEnabled bool      `db:"self_registration_enabled" json:"self_registration_enabled"`
+	CreatedAt               time.Time `db:"created_at"                json:"created_at"`
+	UpdatedAt               time.Time `db:"updated_at"                json:"updated_at"`
 }
 
 type ListTenantsRequest struct {
-	Pagination model.Pagination
-	Filters    []model.Filter
-	Sorts      []model.Sort
+	model.ListRequest
 }
 
 type ListTenantsResponse struct {
@@ -28,7 +30,7 @@ type ListTenantsResponse struct {
 }
 
 type GetTenantRequest struct {
-	ID string `json:"id"`
+	ID uuid.UUID `json:"id"`
 }
 
 type CreateTenantRequest struct {
@@ -40,8 +42,8 @@ type CreateTenantRequest struct {
 }
 
 type UpdateTenantRequest struct {
-	ID                      string `json:"id"`
-	Name                    string `json:"name"`
-	SubscriptionType        int    `json:"subscription_type"`
-	SelfRegistrationEnabled bool   `json:"self_registration_enabled"`
+	ID                      uuid.UUID `json:"id"`
+	Name                    string    `json:"name"`
+	SubscriptionType        int       `json:"subscription_type"`
+	SelfRegistrationEnabled bool      `json:"self_registration_enabled"`
 }

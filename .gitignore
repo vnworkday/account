@@ -47,3 +47,4 @@ go.work
 node_modules/
 *.cov
 .env
+.DS_Store

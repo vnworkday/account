@@ -63,7 +63,7 @@ func (b *MutationBuilder[T]) MergeInto(table string) *MutationBuilder[T] {
 	return b
 }
 
-func (b *MutationBuilder[T]) Using(values T) *MutationBuilder[T] {
+func (b *MutationBuilder[T]) Using(values *T) *MutationBuilder[T] {
 	if b.err != nil {
 		return b
 	}

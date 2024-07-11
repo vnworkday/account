@@ -185,7 +185,7 @@ func (b *QueryBuilder[T]) reset() {
 	b.err = nil
 }
 
-func (b *QueryBuilder[T]) Query(ctx context.Context, db *sql.DB, scanner func(row *sql.Rows, out T) error) (T, error) {
+func (b *QueryBuilder[T]) Query(ctx context.Context, db *sql.DB, scanner func(row *sql.Rows, out T) error) (*T, error) {
 	var out T
 	var rows *sql.Rows
 	var query string
@@ -194,17 +194,17 @@ func (b *QueryBuilder[T]) Query(ctx context.Context, db *sql.DB, scanner func(ro
 	defer b.reset()
 
 	if b.err != nil {
-		return out, b.err
+		return nil, b.err
 	}
 
 	query, err = b.build()
 	if err != nil {
-		return out, err
+		return nil, err
 	}
 
 	rows, err = db.QueryContext(ctx, query, b.whereArgs...)
 	if err != nil {
-		return out, err
+		return nil, err
 	}
 
 	defer func() {
@@ -213,13 +213,13 @@ func (b *QueryBuilder[T]) Query(ctx context.Context, db *sql.DB, scanner func(ro
 
 	for rows.Next() {
 		if e := scanner(rows, out); e != nil {
-			return out, e
+			return nil, e
 		}
 	}
 
 	if rows.Err() != nil {
-		return out, rows.Err()
+		return nil, rows.Err()
 	}
 
-	return out, nil
+	return &out, nil
 }

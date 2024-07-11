@@ -172,10 +172,10 @@ func TestMutationBuilder_On(t *testing.T) {
 		{
 			name: "On With Valid Condition",
 			mergeCond: MergeCondition{
-				SourceCol:       "id",
-				TargetCol:       "id",
-				Op:              model.Eq,
-				IsCaseSensitive: false,
+				SourceCol:     "id",
+				TargetCol:     "id",
+				Op:            model.Eq,
+				CaseSensitive: false,
 			},
 			want:      "ON source.id = target.id",
 			wantError: false,
@@ -183,10 +183,10 @@ func TestMutationBuilder_On(t *testing.T) {
 		{
 			name: "On With Case Sensitive Condition",
 			mergeCond: MergeCondition{
-				SourceCol:       "name",
-				TargetCol:       "name",
-				Op:              model.Eq,
-				IsCaseSensitive: true,
+				SourceCol:     "name",
+				TargetCol:     "name",
+				Op:            model.Eq,
+				CaseSensitive: true,
 			},
 			want:      "ON LOWER(source.name) = LOWER(target.name)",
 			wantError: false,
@@ -194,10 +194,10 @@ func TestMutationBuilder_On(t *testing.T) {
 		{
 			name: "On With Invalid Operator",
 			mergeCond: MergeCondition{
-				SourceCol:       "id",
-				TargetCol:       "id",
-				Op:              model.Op(999),
-				IsCaseSensitive: false,
+				SourceCol:     "id",
+				TargetCol:     "id",
+				Op:            model.Op(999),
+				CaseSensitive: false,
 			},
 			want:      "",
 			wantError: true,
@@ -205,10 +205,10 @@ func TestMutationBuilder_On(t *testing.T) {
 		{
 			name: "On With Empty Source Column",
 			mergeCond: MergeCondition{
-				SourceCol:       "",
-				TargetCol:       "id",
-				Op:              model.Eq,
-				IsCaseSensitive: false,
+				SourceCol:     "",
+				TargetCol:     "id",
+				Op:            model.Eq,
+				CaseSensitive: false,
 			},
 			want:      "",
 			wantError: true,
@@ -216,10 +216,10 @@ func TestMutationBuilder_On(t *testing.T) {
 		{
 			name: "On With Empty Target Column",
 			mergeCond: MergeCondition{
-				SourceCol:       "id",
-				TargetCol:       "",
-				Op:              model.Eq,
-				IsCaseSensitive: false,
+				SourceCol:     "id",
+				TargetCol:     "",
+				Op:            model.Eq,
+				CaseSensitive: false,
 			},
 			want:      "",
 			wantError: true,
@@ -253,25 +253,25 @@ func TestMutationBuilder_OnRaw(t *testing.T) {
 		wantError bool
 	}{
 		{
-			name:      "OnRaw With Valid Condition",
+			name:      "onRaw With Valid Condition",
 			mergeCond: "target.id = source.id",
 			want:      "ON target.id = source.id",
 			wantError: false,
 		},
 		{
-			name:      "OnRaw With Empty Condition",
+			name:      "onRaw With Empty Condition",
 			mergeCond: "",
 			want:      "ON ",
 			wantError: true,
 		},
 		{
-			name:      "OnRaw With Multiple Calls",
+			name:      "onRaw With Multiple Calls",
 			mergeCond: "target.id = source.id AND target.name = source.name",
 			want:      "ON target.id = source.id AND target.name = source.name",
 			wantError: false,
 		},
 		{
-			name:      "OnRaw With Special Characters",
+			name:      "onRaw With Special Characters",
 			mergeCond: "target.name = 'O\\'Reilly'",
 			want:      "ON target.name = 'O\\'Reilly'",
 			wantError: false,
@@ -283,7 +283,7 @@ func TestMutationBuilder_OnRaw(t *testing.T) {
 			t.Parallel()
 
 			builder := NewMutationBuilder[string]()
-			gotBuilder := builder.OnRaw(tt.mergeCond)
+			gotBuilder := builder.onRaw(tt.mergeCond)
 
 			got := gotBuilder.onClause.String()
 			gotErr := gotBuilder.err
@@ -411,7 +411,11 @@ func TestMutationBuilder_Build(t *testing.T) {
 			setup: func(b *MutationBuilder[string]) {
 				b.MergeInto("users").
 					UsingValues(Setter{Field: "id", Value: 1}).
-					OnRaw("target.id = source.id")
+					On(MergeCondition{
+						SourceCol: "id",
+						TargetCol: "id",
+						Op:        model.Eq,
+					})
 			},
 			want:      "",
 			wantError: true,
@@ -420,7 +424,11 @@ func TestMutationBuilder_Build(t *testing.T) {
 			name: "Build Without MergeInto Clause",
 			setup: func(b *MutationBuilder[string]) {
 				b.UsingValues(Setter{Field: "id", Value: 1}).
-					OnRaw("target.id = source.id")
+					On(MergeCondition{
+						SourceCol: "id",
+						TargetCol: "id",
+						Op:        model.Eq,
+					})
 			},
 			want:      "",
 			wantError: true,
@@ -429,13 +437,17 @@ func TestMutationBuilder_Build(t *testing.T) {
 			name: "Build Without UsingValues Clause",
 			setup: func(b *MutationBuilder[string]) {
 				b.MergeInto("users").
-					OnRaw("target.id = source.id")
+					On(MergeCondition{
+						SourceCol: "id",
+						TargetCol: "id",
+						Op:        model.Eq,
+					})
 			},
 			want:      "",
 			wantError: true,
 		},
 		{
-			name: "Build Without OnRaw Clause",
+			name: "Build Without onRaw Clause",
 			setup: func(b *MutationBuilder[string]) {
 				b.MergeInto("users").
 					UsingValues(Setter{Field: "id", Value: 1})
@@ -448,7 +460,11 @@ func TestMutationBuilder_Build(t *testing.T) {
 			setup: func(b *MutationBuilder[string]) {
 				b.MergeInto("users").
 					UsingValues(Setter{Field: "id", Value: 1}).
-					OnRaw("target.id = source.id").
+					On(MergeCondition{
+						SourceCol: "id",
+						TargetCol: "id",
+						Op:        model.Eq,
+					}).
 					WhenMatched("target.name = source.name").
 					ThenDelete().
 					WhenNotMatched().
@@ -456,7 +472,7 @@ func TestMutationBuilder_Build(t *testing.T) {
 			},
 			want: "MERGE INTO users AS target " +
 				"USING (VALUES (?)) AS source (id) " +
-				"ON target.id = source.id " +
+				"ON source.id = target.id " +
 				"WHEN NOT MATCHED THEN DO NOTHING " +
 				"WHEN MATCHED AND target.name = source.name THEN DELETE",
 			wantError: false,
@@ -474,7 +490,11 @@ func TestMutationBuilder_Build(t *testing.T) {
 			setup: func(b *MutationBuilder[string]) {
 				b.MergeInto("users").
 					UsingValues(Setter{Field: "data", Value: map[string]any{"key": "value"}}).
-					OnRaw("target.id = source.id").
+					On(MergeCondition{
+						SourceCol: "id",
+						TargetCol: "id",
+						Op:        model.Eq,
+					}).
 					WhenMatched("target.name = source.name").
 					ThenDelete().
 					WhenNotMatched().
@@ -482,18 +502,26 @@ func TestMutationBuilder_Build(t *testing.T) {
 			},
 			want: "MERGE INTO users AS target " +
 				"USING (VALUES (?)) AS source (data) " +
-				"ON target.id = source.id " +
+				"ON source.id = target.id " +
 				"WHEN NOT MATCHED THEN DO NOTHING " +
 				"WHEN MATCHED AND target.name = source.name THEN DELETE",
 			wantError: false,
 		},
 		{
-			name: "Build With Multiple OnRaw Conditions",
+			name: "Build With Multiple onRaw Conditions",
 			setup: func(b *MutationBuilder[string]) {
 				b.MergeInto("users").
 					UsingValues(Setter{Field: "id", Value: 1}).
-					OnRaw("target.id = source.id").
-					OnRaw("target.name = source.name").
+					On(MergeCondition{
+						SourceCol: "id",
+						TargetCol: "id",
+						Op:        model.Eq,
+					}).
+					On(MergeCondition{
+						SourceCol: "name",
+						TargetCol: "name",
+						Op:        model.Eq,
+					}).
 					WhenMatched("target.name = source.name").
 					ThenDelete().
 					WhenNotMatched().
@@ -501,7 +529,7 @@ func TestMutationBuilder_Build(t *testing.T) {
 			},
 			want: "MERGE INTO users AS target " +
 				"USING (VALUES (?)) AS source (id) " +
-				"ON target.id = source.id AND target.name = source.name " +
+				"ON source.id = target.id AND source.name = target.name " +
 				"WHEN NOT MATCHED THEN DO NOTHING " +
 				"WHEN MATCHED AND target.name = source.name THEN DELETE",
 			wantError: false,
@@ -511,13 +539,17 @@ func TestMutationBuilder_Build(t *testing.T) {
 			setup: func(b *MutationBuilder[string]) {
 				b.MergeInto("users").
 					UsingValues(Setter{Field: "id", Value: 1}).
-					OnRaw("target.id = source.id").
+					On(MergeCondition{
+						SourceCol: "id",
+						TargetCol: "id",
+						Op:        model.Eq,
+					}).
 					WhenMatched("target.name = source.name", "target.age = source.age").
 					ThenDelete()
 			},
 			want: "MERGE INTO users AS target " +
 				"USING (VALUES (?)) AS source (id) " +
-				"ON target.id = source.id " +
+				"ON source.id = target.id " +
 				"WHEN MATCHED AND target.name = source.name AND target.age = source.age " +
 				"THEN DELETE",
 			wantError: false,
@@ -527,7 +559,11 @@ func TestMutationBuilder_Build(t *testing.T) {
 			setup: func(b *MutationBuilder[string]) {
 				b.MergeInto("users").
 					UsingValues(Setter{Field: "id", Value: 1}).
-					OnRaw("target.id = source.id").
+					On(MergeCondition{
+						SourceCol: "id",
+						TargetCol: "id",
+						Op:        model.Eq,
+					}).
 					WhenNotMatched().
 					ThenDoNothing().
 					WhenMatched("target.name = source.name").
@@ -535,7 +571,7 @@ func TestMutationBuilder_Build(t *testing.T) {
 			},
 			want: "MERGE INTO users AS target " +
 				"USING (VALUES (?)) AS source (id) " +
-				"ON target.id = source.id " +
+				"ON source.id = target.id " +
 				"WHEN NOT MATCHED THEN DO NOTHING " +
 				"WHEN MATCHED AND target.name = source.name THEN DO NOTHING",
 			wantError: false,

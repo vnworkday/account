@@ -25,7 +25,7 @@ func StringifyFilter(filter model.Filter, optAlias ...string) (string, error) {
 	var field, op, wildcards string
 	var fieldErr, opErr, wildcardsErr error
 
-	field, fieldErr = stringifyField(filter.Field, filter.IsCaseSensitive, alias)
+	field, fieldErr = stringifyField(filter.Field, filter.CaseSensitive, alias)
 	if fieldErr != nil {
 		return "", errors.Wrap(fieldErr, "repository: failed to stringify filter field")
 	}
@@ -35,7 +35,7 @@ func StringifyFilter(filter model.Filter, optAlias ...string) (string, error) {
 		return "", errors.Wrap(opErr, "repository: failed to stringify filter operator")
 	}
 
-	wildcards, wildcardsErr = buildFilterWildcards(filter.Op, filter.IsCaseSensitive)
+	wildcards, wildcardsErr = buildFilterWildcards(filter.Op, filter.CaseSensitive)
 	if wildcardsErr != nil {
 		return "", errors.Wrap(wildcardsErr, "repository: failed to build filter wildcards")
 	}

@@ -20,9 +20,9 @@ func TestStringifySort(t *testing.T) {
 		{
 			name: "AscendingSortWithoutAlias",
 			sort: model.Sort{
-				Field:           "username",
-				IsCaseSensitive: false,
-				Order:           model.Asc,
+				Field:         "username",
+				CaseSensitive: false,
+				Order:         model.Asc,
 			},
 			want:    "username ASC",
 			wantErr: false,
@@ -30,9 +30,9 @@ func TestStringifySort(t *testing.T) {
 		{
 			name: "DescendingSortWithAlias",
 			sort: model.Sort{
-				Field:           "created_at",
-				IsCaseSensitive: false,
-				Order:           model.Desc,
+				Field:         "created_at",
+				CaseSensitive: false,
+				Order:         model.Desc,
 			},
 			optAlias: []string{"users"},
 			want:     "users.created_at DESC",
@@ -41,9 +41,9 @@ func TestStringifySort(t *testing.T) {
 		{
 			name: "CaseSensitiveSortWithoutAlias",
 			sort: model.Sort{
-				Field:           "email",
-				IsCaseSensitive: true,
-				Order:           model.Asc,
+				Field:         "email",
+				CaseSensitive: true,
+				Order:         model.Asc,
 			},
 			want:    "LOWER(email) ASC",
 			wantErr: false,
@@ -51,9 +51,9 @@ func TestStringifySort(t *testing.T) {
 		{
 			name: "CaseSensitiveSortWithAlias",
 			sort: model.Sort{
-				Field:           "name",
-				IsCaseSensitive: true,
-				Order:           model.Desc,
+				Field:         "name",
+				CaseSensitive: true,
+				Order:         model.Desc,
 			},
 			optAlias: []string{"people"},
 			want:     "LOWER(people.name) DESC",
@@ -62,18 +62,18 @@ func TestStringifySort(t *testing.T) {
 		{
 			name: "EmptyFieldName",
 			sort: model.Sort{
-				Field:           "",
-				IsCaseSensitive: false,
-				Order:           model.Asc,
+				Field:         "",
+				CaseSensitive: false,
+				Order:         model.Asc,
 			},
 			wantErr: true,
 		},
 		{
 			name: "InvalidOrder",
 			sort: model.Sort{
-				Field:           "username",
-				IsCaseSensitive: false,
-				Order:           model.SortOrder("invalid"),
+				Field:         "username",
+				CaseSensitive: false,
+				Order:         model.SortOrder("invalid"),
 			},
 			wantErr: true,
 		},

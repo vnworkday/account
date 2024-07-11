@@ -19,13 +19,14 @@ const (
 	targetAlias = "target"
 
 	matchActionUpdate = "update"
+	matchActionInsert = "insert"
 )
 
 type MergeCondition struct {
-	SourceCol       string
-	TargetCol       string
-	Op              model.Op
-	IsCaseSensitive bool
+	SourceCol     string
+	TargetCol     string
+	Op            model.Op
+	CaseSensitive bool
 }
 
 type MutationBuilder[T any] struct {
@@ -126,14 +127,14 @@ func (b *MutationBuilder[T]) On(mergeCond MergeCondition) *MutationBuilder[T] {
 	var src, op, target string
 	var srcErr, opErr, targetErr error
 
-	src, srcErr = stringifyField(mergeCond.SourceCol, mergeCond.IsCaseSensitive, sourceAlias)
+	src, srcErr = stringifyField(mergeCond.SourceCol, mergeCond.CaseSensitive, sourceAlias)
 	if srcErr != nil {
 		b.err = errors.Wrap(srcErr, "repository: failed to stringify merge condition source")
 
 		return b
 	}
 
-	target, targetErr = stringifyField(mergeCond.TargetCol, mergeCond.IsCaseSensitive, "target")
+	target, targetErr = stringifyField(mergeCond.TargetCol, mergeCond.CaseSensitive, "target")
 	if targetErr != nil {
 		b.err = errors.Wrap(targetErr, "repository: failed to stringify merge condition target")
 
@@ -149,10 +150,10 @@ func (b *MutationBuilder[T]) On(mergeCond MergeCondition) *MutationBuilder[T] {
 
 	raw := fmt.Sprintf("%s %s %s", src, op, target)
 
-	return b.OnRaw(raw)
+	return b.onRaw(raw)
 }
 
-func (b *MutationBuilder[T]) OnRaw(mergeCond string) *MutationBuilder[T] {
+func (b *MutationBuilder[T]) onRaw(mergeCond string) *MutationBuilder[T] {
 	if b.err != nil {
 		return b
 	}

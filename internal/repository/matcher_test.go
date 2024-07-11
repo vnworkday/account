@@ -155,7 +155,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert_Columns(t *testing.T) {
 			columns:    []string{"name"},
 			want:       " THEN INSERT (name) VALUES (source.name)",
 			wantError:  false,
-			thenAction: "insert",
+			thenAction: matchActionInsert,
 		},
 		{
 			name:       "ThenInsert With Matched And Multiple Columns",
@@ -163,7 +163,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert_Columns(t *testing.T) {
 			columns:    []string{"name", "age"},
 			want:       " THEN INSERT (name, age) VALUES (source.name, source.age)",
 			wantError:  false,
-			thenAction: "insert",
+			thenAction: matchActionInsert,
 		},
 		{
 			name:       "ThenInsert With Matched",
@@ -171,7 +171,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert_Columns(t *testing.T) {
 			columns:    []string{"name"},
 			want:       "",
 			wantError:  true,
-			thenAction: "insert",
+			thenAction: matchActionInsert,
 		},
 		{
 			name:       "ThenInsert With Matched And No Columns",
@@ -179,7 +179,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert_Columns(t *testing.T) {
 			columns:    []string{},
 			want:       " THEN DO NOTHING",
 			wantError:  false,
-			thenAction: "insert",
+			thenAction: matchActionInsert,
 		},
 	}
 
@@ -250,7 +250,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert(t *testing.T) {
 			setters:    []Setter{{Field: "name", Value: "source.name"}},
 			want:       " THEN INSERT (name) VALUES (source.name)",
 			wantError:  false,
-			thenAction: "insert",
+			thenAction: matchActionInsert,
 		},
 		{
 			name:       "thenInsert NotMatched Multiple Setters",
@@ -258,7 +258,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert(t *testing.T) {
 			setters:    []Setter{{Field: "name", Value: "source.name"}, {Field: "age", Value: "source.age"}},
 			want:       " THEN INSERT (name, age) VALUES (source.name, source.age)",
 			wantError:  false,
-			thenAction: "insert",
+			thenAction: matchActionInsert,
 		},
 		{
 			name:       "thenInsert Matched Error",
@@ -266,7 +266,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert(t *testing.T) {
 			setters:    []Setter{{Field: "name", Value: "source.name"}},
 			want:       "",
 			wantError:  true,
-			thenAction: "insert",
+			thenAction: matchActionInsert,
 		},
 	}
 

@@ -16,7 +16,6 @@ type Service interface {
 
 type Params struct {
 	fx.In
-
 	Logger *zap.Logger
 }
 

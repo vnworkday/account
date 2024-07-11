@@ -14,7 +14,7 @@ func StringifySort(sort model.Sort, optAlias ...string) (string, error) {
 		alias = optAlias[0]
 	}
 
-	field, fieldErr := stringifyField(sort.Field, sort.IsCaseSensitive, alias)
+	field, fieldErr := stringifyField(sort.Field, sort.CaseSensitive, alias)
 	if fieldErr != nil {
 		return "", errors.Wrap(fieldErr, "repository: failed to stringify sort field")
 	}

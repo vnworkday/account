@@ -13,9 +13,9 @@ const (
 )
 
 type Sort struct {
-	Field           string    `json:"field"`
-	Order           SortOrder `json:"order"`
-	IsCaseSensitive bool      `json:"is_case_sensitive"`
+	Field         string    `json:"field"`
+	Order         SortOrder `json:"order"`
+	CaseSensitive bool      `json:"case_sensitive"`
 }
 
 type Op int
@@ -53,8 +53,8 @@ const (
 )
 
 type Filter struct {
-	Field           string `json:"field"`
-	Value           any    `json:"value"`
-	Op              Op     `json:"op"`
-	IsCaseSensitive bool   `json:"is_case_sensitive"`
+	Field         string `json:"field"`
+	Value         any    `json:"value"`
+	Op            Op     `json:"op"`
+	CaseSensitive bool   `json:"is_case_sensitive"`
 }

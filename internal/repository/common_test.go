@@ -75,9 +75,7 @@ func TestStringifyField(t *testing.T) {
 
 			got, gotErr := stringifyField(tt.field, tt.sensitive, tt.alias)
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -195,9 +193,7 @@ func TestStringifyOp(t *testing.T) {
 
 			got, gotErr := stringifyOp(tt.operator)
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }

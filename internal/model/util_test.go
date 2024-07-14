@@ -93,9 +93,7 @@ func TestStructToTable(t *testing.T) {
 
 			got, gotErr := StructToTable(tt.input, "table")
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }

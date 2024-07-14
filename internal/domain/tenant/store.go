@@ -29,7 +29,7 @@ type StoreParams struct {
 }
 
 func NewStore(params StoreParams) (Store, error) {
-	table, err := model.StructToTable(Tenant{}, "tenant`")
+	table, err := model.StructToTable(Tenant{}, "tenant")
 	if err != nil {
 		return nil, err
 	}

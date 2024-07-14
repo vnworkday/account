@@ -138,9 +138,7 @@ func TestStringifyFilter(t *testing.T) {
 
 			got, gotErr := StringifyFilter(tt.filter, tt.optAlias...)
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -226,9 +224,7 @@ func TestBuildFilterWildcards(t *testing.T) {
 
 			got, gotErr := buildFilterWildcards(tt.op, tt.sensitive)
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -342,9 +338,7 @@ func TestCastFilterValue(t *testing.T) {
 
 			got, gotErr := castFilterValue(tt.value, tt.valueType, tt.op, tt.caseSensitive)
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -404,9 +398,7 @@ func TestCastStringValue(t *testing.T) {
 
 			got, gotErr := castStringValue(tt.value, tt.op, tt.caseSensitive)
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -610,9 +602,7 @@ func TestCastNumericValue(t *testing.T) {
 				t.Errorf("unsupported value type: %v", tt.valueType)
 			}
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -843,9 +833,7 @@ func TestConvertSliceToNumeric(t *testing.T) {
 				t.Errorf("unsupported type: " + tt.valueType.String())
 			}
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -901,9 +889,7 @@ func TestConvertSliceToDate(t *testing.T) {
 
 			got, gotErr := convertSliceToDate(tt.values, tt.layout)
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }

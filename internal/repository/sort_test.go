@@ -85,9 +85,7 @@ func TestStringifySort(t *testing.T) {
 
 			got, gotErr := StringifySort(tt.sort, tt.optAlias...)
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }

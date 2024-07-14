@@ -13,21 +13,21 @@ func TestMutationBuilder_MergeInto(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		table     string
-		wantError bool
-		want      string
+		name    string
+		table   string
+		wantErr bool
+		want    string
 	}{
 		{
-			name:      "MergeInto With Valid Table",
-			table:     "users",
-			wantError: false,
-			want:      "MERGE INTO users AS target",
+			name:    "MergeInto With Valid Table",
+			table:   "users",
+			wantErr: false,
+			want:    "MERGE INTO users AS target",
 		},
 		{
-			name:      "MergeInto With Empty Table",
-			table:     "",
-			wantError: true,
+			name:    "MergeInto With Empty Table",
+			table:   "",
+			wantErr: true,
 		},
 	}
 
@@ -41,9 +41,7 @@ func TestMutationBuilder_MergeInto(t *testing.T) {
 			got := gotBuilder.mergeClause
 			gotErr := gotBuilder.err
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -52,10 +50,10 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		setters   []Setter
-		want      map[string]any
-		wantError bool
+		name    string
+		setters []Setter
+		want    map[string]any
+		wantErr bool
 	}{
 		{
 			name:    "UsingValues With Single Setter",
@@ -65,7 +63,7 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 				"keys":   []string{"name"},
 				"values": []any{"John Doe"},
 			},
-			wantError: false,
+			wantErr: false,
 		},
 		{
 			name:    "UsingValues With Multiple Setters",
@@ -75,7 +73,7 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 				"keys":   []string{"name", "age"},
 				"values": []any{"John Doe", 30},
 			},
-			wantError: false,
+			wantErr: false,
 		},
 		{
 			name:    "UsingValues With No Setters",
@@ -85,7 +83,7 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 				"keys":   []string{},
 				"values": []any{},
 			},
-			wantError: true,
+			wantErr: true,
 		},
 		{
 			name:    "UsingValues With Nil Setters",
@@ -95,7 +93,7 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 				"keys":   []string{},
 				"values": []any{},
 			},
-			wantError: true,
+			wantErr: true,
 		},
 		{
 			name:    "UsingValues With Complex Value",
@@ -105,7 +103,7 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 				"keys":   []string{"data"},
 				"values": []any{map[string]any{"key": "value"}},
 			},
-			wantError: false,
+			wantErr: false,
 		},
 		{
 			name:    "UsingValues With Setter Having Empty Field",
@@ -115,7 +113,7 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 				"keys":   []string{},
 				"values": []any{},
 			},
-			wantError: true,
+			wantErr: true,
 		},
 		{
 			name:    "UsingValues With Setter Having Nil Value",
@@ -125,7 +123,7 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 				"keys":   []string{"name"},
 				"values": []any{nil},
 			},
-			wantError: false,
+			wantErr: false,
 		},
 		{
 			name:    "UsingValues With Multiple Setters Including Empty Field",
@@ -135,7 +133,7 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 				"keys":   []string{},
 				"values": []any{},
 			},
-			wantError: true,
+			wantErr: true,
 		},
 	}
 
@@ -153,9 +151,7 @@ func TestMutationBuilder_UsingValues(t *testing.T) {
 			}
 			gotErr := gotBuilder.err
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -167,7 +163,7 @@ func TestMutationBuilder_On(t *testing.T) {
 		name      string
 		mergeCond MergeCondition
 		want      string
-		wantError bool
+		wantErr   bool
 	}{
 		{
 			name: "On With Valid Condition",
@@ -177,8 +173,8 @@ func TestMutationBuilder_On(t *testing.T) {
 				Op:            model.Eq,
 				CaseSensitive: false,
 			},
-			want:      "ON source.id = target.id",
-			wantError: false,
+			want:    "ON source.id = target.id",
+			wantErr: false,
 		},
 		{
 			name: "On With Case Sensitive Condition",
@@ -188,8 +184,8 @@ func TestMutationBuilder_On(t *testing.T) {
 				Op:            model.Eq,
 				CaseSensitive: true,
 			},
-			want:      "ON LOWER(source.name) = LOWER(target.name)",
-			wantError: false,
+			want:    "ON LOWER(source.name) = LOWER(target.name)",
+			wantErr: false,
 		},
 		{
 			name: "On With Invalid Operator",
@@ -199,8 +195,8 @@ func TestMutationBuilder_On(t *testing.T) {
 				Op:            model.Op(999),
 				CaseSensitive: false,
 			},
-			want:      "",
-			wantError: true,
+			want:    "",
+			wantErr: true,
 		},
 		{
 			name: "On With Empty Source Column",
@@ -210,8 +206,8 @@ func TestMutationBuilder_On(t *testing.T) {
 				Op:            model.Eq,
 				CaseSensitive: false,
 			},
-			want:      "",
-			wantError: true,
+			want:    "",
+			wantErr: true,
 		},
 		{
 			name: "On With Empty Target Column",
@@ -221,8 +217,8 @@ func TestMutationBuilder_On(t *testing.T) {
 				Op:            model.Eq,
 				CaseSensitive: false,
 			},
-			want:      "",
-			wantError: true,
+			want:    "",
+			wantErr: true,
 		},
 	}
 
@@ -236,9 +232,7 @@ func TestMutationBuilder_On(t *testing.T) {
 			got := gotBuilder.onClause.String()
 			gotErr := gotBuilder.err
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -250,31 +244,31 @@ func TestMutationBuilder_OnRaw(t *testing.T) {
 		name      string
 		mergeCond string
 		want      string
-		wantError bool
+		wantErr   bool
 	}{
 		{
 			name:      "onRaw With Valid Condition",
 			mergeCond: "target.id = source.id",
 			want:      "ON target.id = source.id",
-			wantError: false,
+			wantErr:   false,
 		},
 		{
 			name:      "onRaw With Empty Condition",
 			mergeCond: "",
 			want:      "ON ",
-			wantError: true,
+			wantErr:   true,
 		},
 		{
 			name:      "onRaw With Multiple Calls",
 			mergeCond: "target.id = source.id AND target.name = source.name",
 			want:      "ON target.id = source.id AND target.name = source.name",
-			wantError: false,
+			wantErr:   false,
 		},
 		{
 			name:      "onRaw With Special Characters",
 			mergeCond: "target.name = 'O\\'Reilly'",
 			want:      "ON target.name = 'O\\'Reilly'",
-			wantError: false,
+			wantErr:   false,
 		},
 	}
 
@@ -288,9 +282,7 @@ func TestMutationBuilder_OnRaw(t *testing.T) {
 			got := gotBuilder.onClause.String()
 			gotErr := gotBuilder.err
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -302,63 +294,63 @@ func TestMutationBuilder_WhenMatchedOrNot(t *testing.T) {
 		name       string
 		conditions []string
 		want       string
-		wantError  bool
+		wantErr    bool
 		matched    bool
 	}{
 		{
 			name:       "WhenNotMatched Without Conditions",
 			conditions: []string{},
 			want:       "WHEN NOT MATCHED",
-			wantError:  false,
+			wantErr:    false,
 			matched:    false,
 		},
 		{
 			name:       "WhenNotMatched With Single Condition",
 			conditions: []string{"target.id IS NULL"},
 			want:       "WHEN NOT MATCHED AND target.id IS NULL",
-			wantError:  false,
+			wantErr:    false,
 			matched:    false,
 		},
 		{
 			name:       "WhenNotMatched With Multiple Conditions",
 			conditions: []string{"target.id IS NULL", "target.name IS NULL"},
 			want:       "WHEN NOT MATCHED AND target.id IS NULL AND target.name IS NULL",
-			wantError:  false,
+			wantErr:    false,
 			matched:    false,
 		},
 		{
 			name:       "WhenNotMatched Preceded By Error",
 			conditions: []string{"target.id IS NULL"},
 			want:       "",
-			wantError:  true,
+			wantErr:    true,
 			matched:    false,
 		},
 		{
 			name:       "WhenMatched Without Conditions",
 			conditions: []string{},
 			want:       "WHEN MATCHED",
-			wantError:  false,
+			wantErr:    false,
 			matched:    true,
 		},
 		{
 			name:       "WhenMatched With Single Condition",
 			conditions: []string{"target.id = source.id"},
 			want:       "WHEN MATCHED AND target.id = source.id",
-			wantError:  false,
+			wantErr:    false,
 			matched:    true,
 		},
 		{
 			name:       "WhenMatched With Multiple Conditions",
 			conditions: []string{"target.id = source.id", "target.name = source.name"},
 			want:       "WHEN MATCHED AND target.id = source.id AND target.name = source.name",
-			wantError:  false,
+			wantErr:    false,
 			matched:    true,
 		},
 		{
 			name:       "WhenMatched Preceded By Error",
 			conditions: []string{"target.id = source.id"},
 			want:       "",
-			wantError:  true,
+			wantErr:    true,
 			matched:    true,
 		},
 	}
@@ -377,7 +369,7 @@ func TestMutationBuilder_WhenMatchedOrNot(t *testing.T) {
 				gotBuilder = builder.WhenMatched(tt.conditions...)
 			}
 
-			if tt.wantError {
+			if tt.wantErr {
 				gotBuilder.err = errors.New("forced error")
 			}
 
@@ -390,9 +382,7 @@ func TestMutationBuilder_WhenMatchedOrNot(t *testing.T) {
 				got = gotBuilder.mb.matchClause.String()
 			}
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }
@@ -401,10 +391,10 @@ func TestMutationBuilder_Build(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		setup     func(b *MutationBuilder[string])
-		want      string
-		wantError bool
+		name    string
+		setup   func(b *MutationBuilder[string])
+		want    string
+		wantErr bool
 	}{
 		{
 			name: "Build Without When Clauses",
@@ -417,8 +407,8 @@ func TestMutationBuilder_Build(t *testing.T) {
 						Op:        model.Eq,
 					})
 			},
-			want:      "",
-			wantError: true,
+			want:    "",
+			wantErr: true,
 		},
 		{
 			name: "Build Without MergeInto Clause",
@@ -430,8 +420,8 @@ func TestMutationBuilder_Build(t *testing.T) {
 						Op:        model.Eq,
 					})
 			},
-			want:      "",
-			wantError: true,
+			want:    "",
+			wantErr: true,
 		},
 		{
 			name: "Build Without UsingValues Clause",
@@ -443,8 +433,8 @@ func TestMutationBuilder_Build(t *testing.T) {
 						Op:        model.Eq,
 					})
 			},
-			want:      "",
-			wantError: true,
+			want:    "",
+			wantErr: true,
 		},
 		{
 			name: "Build Without onRaw Clause",
@@ -452,8 +442,8 @@ func TestMutationBuilder_Build(t *testing.T) {
 				b.MergeInto("users").
 					UsingValues(Setter{Field: "id", Value: 1})
 			},
-			want:      "",
-			wantError: true,
+			want:    "",
+			wantErr: true,
 		},
 		{
 			name: "Build With All Clauses",
@@ -475,15 +465,15 @@ func TestMutationBuilder_Build(t *testing.T) {
 				"ON source.id = target.id " +
 				"WHEN NOT MATCHED THEN DO NOTHING " +
 				"WHEN MATCHED AND target.name = source.name THEN DELETE",
-			wantError: false,
+			wantErr: false,
 		},
 		{
 			name: "Build With Preceding Error",
 			setup: func(b *MutationBuilder[string]) {
 				b.err = errors.New("forced error")
 			},
-			want:      "",
-			wantError: true,
+			want:    "",
+			wantErr: true,
 		},
 		{
 			name: "Build With Complex UsingValues",
@@ -505,7 +495,7 @@ func TestMutationBuilder_Build(t *testing.T) {
 				"ON source.id = target.id " +
 				"WHEN NOT MATCHED THEN DO NOTHING " +
 				"WHEN MATCHED AND target.name = source.name THEN DELETE",
-			wantError: false,
+			wantErr: false,
 		},
 		{
 			name: "Build With Multiple onRaw Conditions",
@@ -532,7 +522,7 @@ func TestMutationBuilder_Build(t *testing.T) {
 				"ON source.id = target.id AND source.name = target.name " +
 				"WHEN NOT MATCHED THEN DO NOTHING " +
 				"WHEN MATCHED AND target.name = source.name THEN DELETE",
-			wantError: false,
+			wantErr: false,
 		},
 		{
 			name: "Build With Multiple WhenMatched Conditions",
@@ -552,7 +542,7 @@ func TestMutationBuilder_Build(t *testing.T) {
 				"ON source.id = target.id " +
 				"WHEN MATCHED AND target.name = source.name AND target.age = source.age " +
 				"THEN DELETE",
-			wantError: false,
+			wantErr: false,
 		},
 		{
 			name: "Build With WhenNotMatched And WhenMatched",
@@ -574,7 +564,7 @@ func TestMutationBuilder_Build(t *testing.T) {
 				"ON source.id = target.id " +
 				"WHEN NOT MATCHED THEN DO NOTHING " +
 				"WHEN MATCHED AND target.name = source.name THEN DO NOTHING",
-			wantError: false,
+			wantErr: false,
 		},
 	}
 
@@ -587,9 +577,7 @@ func TestMutationBuilder_Build(t *testing.T) {
 
 			got, gotErr := builder.build()
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, gotErr)
 		})
 	}
 }

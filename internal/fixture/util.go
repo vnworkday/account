@@ -1,22 +1,20 @@
 package fixture
 
 import (
-	"github.com/gookit/goutil/reflects"
-	"github.com/pkg/errors"
+	"github.com/gookit/goutil/testutil/assert"
+	"testing"
 )
 
-func ExpectationsWereMet[T any](want, got T, wantErr bool, err error) error {
-	if !wantErr && err != nil {
-		return errors.Errorf("\nwant: %v\n got: %v", "no error", err)
-	}
+func ExpectationsWereMet[T any](t *testing.T, want, got T, wantErr bool, err error) {
+	t.Helper()
 
-	if !wantErr && !reflects.IsEqual(want, got) {
-		return errors.Errorf("\nwant: %v\n got: %v", want, got)
-	}
+	assert.DisableColor()
+	assert.HideFullPath()
 
-	if wantErr && err == nil {
-		return errors.Errorf("\nwant: %v\n got: %v", "error occurred", "no error")
+	if wantErr {
+		assert.Error(t, err)
+	} else {
+		assert.NoError(t, err)
+		assert.Equal(t, want, got)
 	}
-
-	return nil
 }

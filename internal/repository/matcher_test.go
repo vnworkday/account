@@ -43,9 +43,7 @@ func TestMatcherBuilder_ThenDoNothing(t *testing.T) {
 				got = matcher.notMatchClause.String()
 			}
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, false, matcher.err); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, false, matcher.err)
 		})
 	}
 }
@@ -99,9 +97,7 @@ func TestMatcherBuilder_ThenDelete(t *testing.T) {
 				got = matcher.mb.notMatchClause.String()
 			}
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, matcher.err); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantError, matcher.err)
 		})
 	}
 }
@@ -202,9 +198,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert_Columns(t *testing.T) {
 				got = mb.notMatchClause.String()
 			}
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, mb.err); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantError, mb.err)
 		})
 	}
 }
@@ -289,9 +283,7 @@ func TestMatcherBuilder_ThenUpdateOrInsert(t *testing.T) {
 				got = mb.notMatchClause.String()
 			}
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantError, mb.err); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantError, mb.err)
 		})
 	}
 }

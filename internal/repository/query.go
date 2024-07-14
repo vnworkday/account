@@ -185,7 +185,11 @@ func (b *QueryBuilder[T]) build() (string, error) {
 	return b.query, nil
 }
 
-func (b *QueryBuilder[T]) reset() {
+func (b *QueryBuilder[T]) String() (string, error) {
+	return b.build()
+}
+
+func (b *QueryBuilder[T]) Close() {
 	b.query = ""
 	b.selectClause = ""
 	b.fromClause = ""
@@ -200,7 +204,7 @@ func (b *QueryBuilder[T]) Exist(ctx context.Context, db *sql.DB) (bool, error) {
 	var query string
 	var err error
 
-	defer b.reset()
+	defer b.Close()
 
 	if b.err != nil {
 		return false, b.err
@@ -238,7 +242,7 @@ func (b *QueryBuilder[T]) Query(ctx context.Context, db *sql.DB, scanner func(ro
 	var query string
 	var err error
 
-	defer b.reset()
+	defer b.Close()
 
 	if b.err != nil {
 		return nil, b.err

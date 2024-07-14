@@ -47,9 +47,7 @@ func TestQueryBuilder_Select(t *testing.T) {
 			qb := &QueryBuilder[any]{}
 			got := qb.Select(tt.fields...).selectClause
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, qb.err); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, qb.err)
 		})
 	}
 }
@@ -94,9 +92,7 @@ func TestQueryBuilder_From(t *testing.T) {
 
 			got := qb.fromClause
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, qb.err); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, qb.err)
 		})
 	}
 }
@@ -182,9 +178,7 @@ func TestQueryBuilder_Where(t *testing.T) {
 
 			got := qb.whereClause.String()
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, qb.err); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, qb.err)
 		})
 	}
 }
@@ -224,9 +218,7 @@ func TestQueryBuilder_OrderBy(t *testing.T) {
 
 			got := qb.sortClause.String()
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, qb.err); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, qb.err)
 		})
 	}
 }
@@ -272,9 +264,7 @@ func TestQueryBuilder_Paginate(t *testing.T) {
 
 			got := qb.paginationClause
 
-			if err := fixture.ExpectationsWereMet(tt.want, got, tt.wantErr, qb.err); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.want, got, tt.wantErr, qb.err)
 		})
 	}
 }
@@ -425,9 +415,7 @@ func TestQueryBuilder_Build(t *testing.T) {
 			tt.setupFunc(qb)
 			gotQuery, gotErr := qb.build()
 
-			if err := fixture.ExpectationsWereMet(tt.wantQuery, gotQuery, tt.wantErr, gotErr); err != nil {
-				t.Error(err)
-			}
+			fixture.ExpectationsWereMet(t, tt.wantQuery, gotQuery, tt.wantErr, gotErr)
 		})
 	}
 }

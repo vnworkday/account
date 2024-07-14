@@ -15,6 +15,11 @@ import (
 type Store interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*Tenant, error)
 	FindByPublicID(ctx context.Context, publicID string) (*Tenant, error)
+
+	ExistByName(ctx context.Context, name string) (bool, error)
+	ExistByDomain(ctx context.Context, domain string) (bool, error)
+	ExistByNameAndIDNot(ctx context.Context, name string, id uuid.UUID) (bool, error)
+
 	Save(ctx context.Context, tenant *Tenant) error
 }
 
@@ -38,6 +43,41 @@ func NewStore(params StoreParams) (Store, error) {
 type store struct {
 	db    *sql.DB
 	table *model.Table
+}
+
+func (r store) ExistByNameAndIDNot(ctx context.Context, name string, id uuid.UUID) (bool, error) {
+	return repository.ExistByFields[Tenant](ctx, r.db, r.table.Name, []model.Filter{
+		{
+			Field: "name",
+			Op:    model.Eq,
+			Value: name,
+		},
+		{
+			Field: "id",
+			Op:    model.Ne,
+			Value: id,
+		},
+	})
+}
+
+func (r store) ExistByDomain(ctx context.Context, domain string) (bool, error) {
+	return repository.ExistByFields[Tenant](ctx, r.db, r.table.Name, []model.Filter{
+		{
+			Field: "domain",
+			Op:    model.Eq,
+			Value: domain,
+		},
+	})
+}
+
+func (r store) ExistByName(ctx context.Context, name string) (bool, error) {
+	return repository.ExistByFields[Tenant](ctx, r.db, r.table.Name, []model.Filter{
+		{
+			Field: "name",
+			Op:    model.Eq,
+			Value: name,
+		},
+	})
 }
 
 func (r store) FindByID(ctx context.Context, id uuid.UUID) (*Tenant, error) {

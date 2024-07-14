@@ -26,6 +26,16 @@ func NewQueryBuilder[T any]() *QueryBuilder[T] {
 	return &QueryBuilder[T]{}
 }
 
+func (b *QueryBuilder[T]) SelectOne() *QueryBuilder[T] {
+	if b.err != nil {
+		return b
+	}
+
+	b.selectClause = "SELECT 1"
+
+	return b
+}
+
 func (b *QueryBuilder[T]) Select(fields ...string) *QueryBuilder[T] {
 	if b.err != nil {
 		return b
@@ -183,6 +193,43 @@ func (b *QueryBuilder[T]) reset() {
 	b.whereArgs = nil
 	b.sortClause.Reset()
 	b.err = nil
+}
+
+func (b *QueryBuilder[T]) Exist(ctx context.Context, db *sql.DB) (bool, error) {
+	var rows *sql.Rows
+	var query string
+	var err error
+
+	defer b.reset()
+
+	if b.err != nil {
+		return false, b.err
+	}
+
+	query, err = b.build()
+	if err != nil {
+		return false, err
+	}
+
+	// sub-optimize to make sure there is at most 1 record returned from exist-checking query
+	if !strings.Contains(query, "LIMIT 1") {
+		query += " LIMIT 1"
+	}
+
+	rows, err = db.QueryContext(ctx, query, b.whereArgs...)
+	if err != nil {
+		return false, err
+	}
+
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	if rows.Err() != nil {
+		return false, rows.Err()
+	}
+
+	return rows.Next(), nil
 }
 
 func (b *QueryBuilder[T]) Query(ctx context.Context, db *sql.DB, scanner func(row *sql.Rows, out T) error) (*T, error) {

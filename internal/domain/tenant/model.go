@@ -24,11 +24,6 @@ type ListTenantsRequest struct {
 	model.ListRequest
 }
 
-type ListTenantsResponse struct {
-	model.Page
-	Tenants []Tenant `json:"tenants"`
-}
-
 type GetTenantRequest struct {
 	ID uuid.UUID `json:"id"`
 }

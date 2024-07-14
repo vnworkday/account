@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/pkg/errors"
+
 	"go.uber.org/fx"
 
 	"github.com/google/uuid"
@@ -15,10 +17,13 @@ import (
 type Store interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*Tenant, error)
 	FindByPublicID(ctx context.Context, publicID string) (*Tenant, error)
+	FindAll(ctx context.Context, request *ListTenantsRequest) ([]*Tenant, error)
 
 	ExistByName(ctx context.Context, name string) (bool, error)
 	ExistByDomain(ctx context.Context, domain string) (bool, error)
 	ExistByNameAndIDNot(ctx context.Context, name string, id uuid.UUID) (bool, error)
+
+	CountAll(ctx context.Context, request *ListTenantsRequest) (int64, error)
 
 	Save(ctx context.Context, tenant *Tenant) error
 }
@@ -46,38 +51,82 @@ type store struct {
 }
 
 func (r store) ExistByNameAndIDNot(ctx context.Context, name string, id uuid.UUID) (bool, error) {
-	return repository.ExistByFields[Tenant](ctx, r.db, r.table.Name, []model.Filter{
-		{
+	return repository.NewQueryBuilder[Tenant]().
+		SelectExists().
+		From(r.table.Name).
+		Where(model.Filter{
 			Field: "name",
 			Op:    model.Eq,
 			Value: name,
-		},
-		{
+		}).
+		Where(model.Filter{
 			Field: "id",
 			Op:    model.Ne,
 			Value: id,
-		},
-	})
+		}).
+		Exist(ctx, r.db)
 }
 
 func (r store) ExistByDomain(ctx context.Context, domain string) (bool, error) {
-	return repository.ExistByFields[Tenant](ctx, r.db, r.table.Name, []model.Filter{
-		{
+	return repository.NewQueryBuilder[Tenant]().
+		SelectExists().
+		From(r.table.Name).
+		Where(model.Filter{
 			Field: "domain",
 			Op:    model.Eq,
 			Value: domain,
-		},
-	})
+		}).
+		Exist(ctx, r.db)
 }
 
 func (r store) ExistByName(ctx context.Context, name string) (bool, error) {
-	return repository.ExistByFields[Tenant](ctx, r.db, r.table.Name, []model.Filter{
-		{
+	return repository.NewQueryBuilder[Tenant]().
+		SelectExists().
+		From(r.table.Name).
+		Where(model.Filter{
 			Field: "name",
 			Op:    model.Eq,
 			Value: name,
-		},
-	})
+		}).
+		Exist(ctx, r.db)
+}
+
+func (r store) CountAll(ctx context.Context, request *ListTenantsRequest) (int64, error) {
+	countBuilder := repository.NewQueryBuilder[Tenant]().
+		SelectCount().
+		From(r.table.Name)
+
+	for _, filter := range request.Filters {
+		countBuilder = countBuilder.Where(filter)
+	}
+
+	count, err := countBuilder.Count(ctx, r.db)
+	if err != nil {
+		return 0, errors.Wrap(err, "repository: failed to count tenants")
+	}
+
+	return count, nil
+}
+
+func (r store) FindAll(ctx context.Context, request *ListTenantsRequest) ([]*Tenant, error) {
+	queryBuilder := repository.NewQueryBuilder[Tenant]().
+		Select(r.table.Columns...).
+		From(r.table.Name)
+
+	for _, filter := range request.Filters {
+		queryBuilder = queryBuilder.Where(filter)
+	}
+
+	for _, sort := range request.Sorts {
+		queryBuilder = queryBuilder.OrderBy(sort)
+	}
+
+	tenants, err := queryBuilder.QueryAll(ctx, r.db, r.scanTo)
+	if err != nil {
+		return nil, errors.Wrap(err, "repository: failed to find tenants")
+	}
+
+	return tenants, nil
 }
 
 func (r store) FindByID(ctx context.Context, id uuid.UUID) (*Tenant, error) {

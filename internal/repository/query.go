@@ -26,16 +26,6 @@ func NewQueryBuilder[T any]() *QueryBuilder[T] {
 	return &QueryBuilder[T]{}
 }
 
-func (b *QueryBuilder[T]) SelectOne() *QueryBuilder[T] {
-	if b.err != nil {
-		return b
-	}
-
-	b.selectClause = "SELECT 1"
-
-	return b
-}
-
 func (b *QueryBuilder[T]) Select(fields ...string) *QueryBuilder[T] {
 	if b.err != nil {
 		return b
@@ -48,6 +38,28 @@ func (b *QueryBuilder[T]) Select(fields ...string) *QueryBuilder[T] {
 	}
 
 	b.selectClause = "SELECT " + strings.Join(fields, ", ")
+
+	return b
+}
+
+func (b *QueryBuilder[T]) SelectExists() *QueryBuilder[T] {
+	if b.err != nil {
+		return b
+	}
+
+	b.Select("1").Paginate(model.Pagination{
+		Limit: 1,
+	})
+
+	return b
+}
+
+func (b *QueryBuilder[T]) SelectCount() *QueryBuilder[T] {
+	if b.err != nil {
+		return b
+	}
+
+	b.Select("COUNT(1)").NoPagination()
 
 	return b
 }
@@ -163,6 +175,12 @@ func (b *QueryBuilder[T]) Paginate(pagination model.Pagination) *QueryBuilder[T]
 	return b
 }
 
+func (b *QueryBuilder[T]) NoPagination() *QueryBuilder[T] {
+	b.paginationClause = ""
+
+	return b
+}
+
 func (b *QueryBuilder[T]) build() (string, error) {
 	if b.err != nil {
 		return "", b.err
@@ -210,14 +228,9 @@ func (b *QueryBuilder[T]) Exist(ctx context.Context, db *sql.DB) (bool, error) {
 		return false, b.err
 	}
 
-	query, err = b.build()
+	query, err = b.SelectExists().build()
 	if err != nil {
 		return false, err
-	}
-
-	// sub-optimize to make sure there is at most 1 record returned from exist-checking query
-	if !strings.Contains(query, "LIMIT 1") {
-		query += " LIMIT 1"
 	}
 
 	rows, err = db.QueryContext(ctx, query, b.whereArgs...)
@@ -234,6 +247,46 @@ func (b *QueryBuilder[T]) Exist(ctx context.Context, db *sql.DB) (bool, error) {
 	}
 
 	return rows.Next(), nil
+}
+
+func (b *QueryBuilder[T]) Count(ctx context.Context, db *sql.DB) (int64, error) {
+	var rows *sql.Rows
+	var query string
+	var err error
+
+	defer b.Close()
+
+	if b.err != nil {
+		return 0, b.err
+	}
+
+	query, err = b.SelectCount().build()
+	if err != nil {
+		return 0, err
+	}
+
+	rows, err = db.QueryContext(ctx, query, b.whereArgs...)
+	if err != nil {
+		return 0, err
+	}
+
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	if rows.Err() != nil {
+		return 0, rows.Err()
+	}
+
+	var count int64
+
+	if rows.Next() {
+		if e := rows.Scan(&count); e != nil {
+			return 0, e
+		}
+	}
+
+	return count, nil
 }
 
 func (b *QueryBuilder[T]) Query(ctx context.Context, db *sql.DB, scanner func(row *sql.Rows, out T) error) (*T, error) {
@@ -273,4 +326,51 @@ func (b *QueryBuilder[T]) Query(ctx context.Context, db *sql.DB, scanner func(ro
 	}
 
 	return &out, nil
+}
+
+func (b *QueryBuilder[T]) QueryAll(
+	ctx context.Context,
+	db *sql.DB,
+	scanner func(row *sql.Rows, out T) error,
+) ([]*T, error) {
+	var out []*T
+	var rows *sql.Rows
+	var query string
+	var err error
+
+	defer b.Close()
+
+	if b.err != nil {
+		return nil, b.err
+	}
+
+	query, err = b.build()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err = db.QueryContext(ctx, query, b.whereArgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	for rows.Next() {
+		var item T
+
+		if e := scanner(rows, item); e != nil {
+			return nil, e
+		}
+
+		out = append(out, &item)
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	return out, nil
 }

@@ -3,8 +3,6 @@ package endpoint
 import (
 	"context"
 
-	"github.com/pkg/errors"
-
 	"github.com/go-kit/kit/endpoint"
 	"github.com/vnworkday/account/internal/domain/tenant"
 	"github.com/vnworkday/account/internal/model"
@@ -17,6 +15,7 @@ type TenantEndpoints struct {
 	DoGetTenant    endpoint.Endpoint
 	DoCreateTenant endpoint.Endpoint
 	DoUpdateTenant endpoint.Endpoint
+	service        tenant.Service
 }
 
 type TenantEndpointsParams struct {
@@ -26,103 +25,71 @@ type TenantEndpointsParams struct {
 }
 
 func NewTenantEndpoints(params TenantEndpointsParams) TenantEndpoints {
-	doListTenants := MakeListEndpoint(params.Service,
+	eps := TenantEndpoints{
+		service: params.Service,
+	}
+
+	doListTenants := eps.makeListTenants(
 		LoggingMiddleware(params.Logger.With(zap.String("method", "ListTenants"))),
 	)
-	doGetTenant := MakeGetEndpoint(params.Service,
+	doGetTenant := eps.makeGetTenant(
 		LoggingMiddleware(params.Logger.With(zap.String("method", "GetTenant"))),
 	)
-	doCreateTenant := MakeCreateEndpoint(params.Service,
+	doCreateTenant := eps.makeCreateTenant(
 		LoggingMiddleware(params.Logger.With(zap.String("method", "CreateTenant"))),
 	)
-	doUpdateTenant := MakeUpdateEndpoint(params.Service,
+	doUpdateTenant := eps.makeUpdateTenant(
 		LoggingMiddleware(params.Logger.With(zap.String("method", "UpdateTenant"))),
 	)
 
-	return TenantEndpoints{
-		DoListTenants:  doListTenants,
-		DoGetTenant:    doGetTenant,
-		DoCreateTenant: doCreateTenant,
-		DoUpdateTenant: doUpdateTenant,
-	}
+	eps.DoListTenants = doListTenants
+	eps.DoGetTenant = doGetTenant
+	eps.DoCreateTenant = doCreateTenant
+	eps.DoUpdateTenant = doUpdateTenant
+
+	return eps
 }
 
-func MakeListEndpoint(svc tenant.Service, middlewares ...endpoint.Middleware) endpoint.Endpoint {
-	ep := func(ctx context.Context, request any) (any, error) {
-		req, ok := request.(*model.ListRequest)
-		if !ok {
-			return nil, errors.New("invalid request")
-		}
-
-		return svc.ListTenants(ctx, req)
-	}
-
-	return applyMiddleware(ep, middlewares...)
+func (t TenantEndpoints) makeListTenants(middlewares ...endpoint.Middleware) endpoint.Endpoint {
+	return makeEndpoint[model.ListRequest, model.ListResponse[tenant.Tenant]](t.ListTenants, middlewares...)
 }
 
-func MakeGetEndpoint(svc tenant.Service, middlewares ...endpoint.Middleware) endpoint.Endpoint {
-	ep := func(ctx context.Context, request any) (any, error) {
-		req, ok := request.(*tenant.GetTenantRequest)
-		if !ok {
-			return nil, errors.New("invalid request")
-		}
-
-		return svc.GetTenant(ctx, req)
-	}
-
-	return applyMiddleware(ep, middlewares...)
+func (t TenantEndpoints) makeGetTenant(middlewares ...endpoint.Middleware) endpoint.Endpoint {
+	return makeEndpoint[tenant.GetTenantRequest, tenant.Tenant](t.GetTenant, middlewares...)
 }
 
-func MakeCreateEndpoint(svc tenant.Service, middlewares ...endpoint.Middleware) endpoint.Endpoint {
-	ep := func(ctx context.Context, request any) (any, error) {
-		req, ok := request.(*tenant.CreateTenantRequest)
-		if !ok {
-			return nil, errors.New("invalid request")
-		}
-
-		return svc.CreateTenant(ctx, req)
-	}
-
-	return applyMiddleware(ep, middlewares...)
+func (t TenantEndpoints) makeCreateTenant(middlewares ...endpoint.Middleware) endpoint.Endpoint {
+	return makeEndpoint[tenant.CreateTenantRequest, tenant.Tenant](t.CreateTenant, middlewares...)
 }
 
-func MakeUpdateEndpoint(svc tenant.Service, middlewares ...endpoint.Middleware) endpoint.Endpoint {
-	ep := func(ctx context.Context, request any) (any, error) {
-		req, ok := request.(*tenant.UpdateTenantRequest)
-		if !ok {
-			return nil, errors.New("invalid request")
-		}
-
-		return svc.UpdateTenant(ctx, req)
-	}
-
-	return applyMiddleware(ep, middlewares...)
+func (t TenantEndpoints) makeUpdateTenant(middlewares ...endpoint.Middleware) endpoint.Endpoint {
+	return makeEndpoint[tenant.UpdateTenantRequest, tenant.Tenant](t.UpdateTenant, middlewares...)
 }
 
 func (t TenantEndpoints) ListTenants(
 	ctx context.Context,
 	request *model.ListRequest,
 ) (*model.ListResponse[tenant.Tenant], error) {
-	return Do[model.ListRequest, model.ListResponse[tenant.Tenant]](ctx, request, t.DoListTenants)
+	return delegate[model.ListRequest, model.ListResponse[tenant.Tenant]](ctx, request, t.DoListTenants)
 }
 
 func (t TenantEndpoints) GetTenant(
 	ctx context.Context,
 	request *tenant.GetTenantRequest,
 ) (*tenant.Tenant, error) {
-	return Do[tenant.GetTenantRequest, tenant.Tenant](ctx, request, t.DoGetTenant)
+	return delegate[tenant.GetTenantRequest, tenant.Tenant](ctx, request, t.DoGetTenant)
 }
 
 func (t TenantEndpoints) CreateTenant(
 	ctx context.Context,
 	request *tenant.CreateTenantRequest,
 ) (*tenant.Tenant, error) {
-	return Do[tenant.CreateTenantRequest, tenant.Tenant](ctx, request, t.DoCreateTenant)
+	return delegate[tenant.CreateTenantRequest, tenant.Tenant](ctx, request, t.DoCreateTenant)
 }
 
 func (t TenantEndpoints) UpdateTenant(
 	ctx context.Context,
 	request *tenant.UpdateTenantRequest,
 ) (*tenant.Tenant, error) {
-	return Do[tenant.UpdateTenantRequest, tenant.Tenant](ctx, request, t.DoUpdateTenant)
+	return delegate[tenant.UpdateTenantRequest, tenant.Tenant](ctx, request, t.DoUpdateTenant)
 }

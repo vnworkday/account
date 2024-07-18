@@ -46,26 +46,26 @@ func (s *tenantServer) CreateTenant(
 	ctx context.Context,
 	request *tenantv1.CreateTenantRequest,
 ) (*tenantv1.CreateTenantResponse, error) {
-	return Serve[tenantv1.CreateTenantRequest, tenantv1.CreateTenantResponse](ctx, request, s.createTenantHandler)
+	return serveGRPC[tenantv1.CreateTenantRequest, tenantv1.CreateTenantResponse](ctx, request, s.createTenantHandler)
 }
 
 func (s *tenantServer) GetTenant(
 	ctx context.Context,
 	request *tenantv1.GetTenantRequest,
 ) (*tenantv1.GetTenantResponse, error) {
-	return Serve[tenantv1.GetTenantRequest, tenantv1.GetTenantResponse](ctx, request, s.getTenantHandler)
+	return serveGRPC[tenantv1.GetTenantRequest, tenantv1.GetTenantResponse](ctx, request, s.getTenantHandler)
 }
 
 func (s *tenantServer) ListTenants(
 	ctx context.Context,
 	request *tenantv1.ListTenantsRequest,
 ) (*tenantv1.ListTenantsResponse, error) {
-	return Serve[tenantv1.ListTenantsRequest, tenantv1.ListTenantsResponse](ctx, request, s.listTenantHandler)
+	return serveGRPC[tenantv1.ListTenantsRequest, tenantv1.ListTenantsResponse](ctx, request, s.listTenantHandler)
 }
 
 func (s *tenantServer) UpdateTenant(
 	ctx context.Context,
 	request *tenantv1.UpdateTenantRequest,
 ) (*tenantv1.UpdateTenantResponse, error) {
-	return Serve[tenantv1.UpdateTenantRequest, tenantv1.UpdateTenantResponse](ctx, request, s.updateTenantHandler)
+	return serveGRPC[tenantv1.UpdateTenantRequest, tenantv1.UpdateTenantResponse](ctx, request, s.updateTenantHandler)
 }

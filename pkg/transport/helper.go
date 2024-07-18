@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func Serve[Req any, Resp any](ctx context.Context, request *Req, handler grpc.Handler) (*Resp, error) {
+func serveGRPC[Req any, Resp any](ctx context.Context, request *Req, handler grpc.Handler) (*Resp, error) {
 	_, resp, err := handler.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err

@@ -6,3 +6,8 @@ type Page struct {
 	Total      int `json:"total"`
 	TotalPages int `json:"total_pages"`
 }
+
+type ListResponse[T any] struct {
+	Items []*T `json:"items"`
+	Count int  `json:"count"`
+}

@@ -17,13 +17,13 @@ import (
 type Store interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*Tenant, error)
 	FindByPublicID(ctx context.Context, publicID string) (*Tenant, error)
-	FindAll(ctx context.Context, request *ListTenantsRequest) ([]*Tenant, error)
+	FindAll(ctx context.Context, request *model.ListRequest) ([]*Tenant, error)
 
 	ExistByName(ctx context.Context, name string) (bool, error)
 	ExistByDomain(ctx context.Context, domain string) (bool, error)
 	ExistByNameAndIDNot(ctx context.Context, name string, id uuid.UUID) (bool, error)
 
-	CountAll(ctx context.Context, request *ListTenantsRequest) (int64, error)
+	CountAll(ctx context.Context, request *model.ListRequest) (int64, error)
 
 	Save(ctx context.Context, tenant *Tenant) error
 }
@@ -91,7 +91,7 @@ func (r store) ExistByName(ctx context.Context, name string) (bool, error) {
 		Exist(ctx, r.db)
 }
 
-func (r store) CountAll(ctx context.Context, request *ListTenantsRequest) (int64, error) {
+func (r store) CountAll(ctx context.Context, request *model.ListRequest) (int64, error) {
 	countBuilder := repository.NewQueryBuilder[Tenant]().
 		SelectCount().
 		From(r.table.Name)
@@ -108,7 +108,7 @@ func (r store) CountAll(ctx context.Context, request *ListTenantsRequest) (int64
 	return count, nil
 }
 
-func (r store) FindAll(ctx context.Context, request *ListTenantsRequest) ([]*Tenant, error) {
+func (r store) FindAll(ctx context.Context, request *model.ListRequest) ([]*Tenant, error) {
 	queryBuilder := repository.NewQueryBuilder[Tenant]().
 		Select(r.table.Columns...).
 		From(r.table.Name)
@@ -175,7 +175,7 @@ func (r store) scanTo(rows *sql.Rows, tenant Tenant) error {
 	if err := rows.Scan(
 		&tenant.ID,
 		&tenant.Name,
-		&tenant.State,
+		&tenant.Status,
 		&tenant.Domain,
 		&tenant.Timezone,
 		&tenant.ProductionType,

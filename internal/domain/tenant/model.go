@@ -4,13 +4,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/vnworkday/account/internal/model"
 )
 
 type Tenant struct {
 	ID                      uuid.UUID `db:"id"                        json:"id"`
 	Name                    string    `db:"name"                      json:"name"`
-	State                   int       `db:"state"                     json:"state"`
+	Status                  int       `db:"status"                    json:"status"`
 	Domain                  string    `db:"domain"                    json:"domain"`
 	Timezone                string    `db:"timezone"                  json:"timezone"`
 	ProductionType          int       `db:"production_type"           json:"production_type"`
@@ -18,10 +17,6 @@ type Tenant struct {
 	SelfRegistrationEnabled bool      `db:"self_registration_enabled" json:"self_registration_enabled"`
 	CreatedAt               time.Time `db:"created_at"                json:"created_at"`
 	UpdatedAt               time.Time `db:"updated_at"                json:"updated_at"`
-}
-
-type ListTenantsRequest struct {
-	model.ListRequest
 }
 
 type GetTenantRequest struct {

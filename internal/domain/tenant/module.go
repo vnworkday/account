@@ -9,7 +9,6 @@ func Register() fx.Option {
 	return fx.Provide(
 		ioc.RegisterWithName(NewStore, "tenant_store"),
 		ioc.RegisterWithName(NewService, "tenant_service"),
-		ioc.RegisterWithName(NewMapper, "tenant_mapper"),
 		ioc.RegisterWithName(NewValidator, "tenant_validator"),
 	)
 }

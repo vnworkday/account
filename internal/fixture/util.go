@@ -1,8 +1,9 @@
 package fixture
 
 import (
-	"github.com/gookit/goutil/testutil/assert"
 	"testing"
+
+	"github.com/gookit/goutil/testutil/assert"
 )
 
 func ExpectationsWereMet[T any](t *testing.T, want, got T, wantErr bool, err error) {

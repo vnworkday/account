@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/vnworkday/account/internal/model"
+
 	"github.com/gookit/goutil/syncs"
 
 	"github.com/google/uuid"
@@ -13,7 +15,7 @@ import (
 )
 
 type Service interface {
-	ListTenants(ctx context.Context, request *ListTenantsRequest) ([]*Tenant, int, error)
+	ListTenants(ctx context.Context, request *model.ListRequest) (*model.ListResponse[Tenant], error)
 	GetTenant(ctx context.Context, request *GetTenantRequest) (*Tenant, error)
 	CreateTenant(ctx context.Context, request *CreateTenantRequest) (*Tenant, error)
 	UpdateTenant(ctx context.Context, request *UpdateTenantRequest) (*Tenant, error)
@@ -37,7 +39,7 @@ type service struct {
 	store  Store
 }
 
-func (s service) ListTenants(ctx context.Context, request *ListTenantsRequest) ([]*Tenant, int, error) {
+func (s service) ListTenants(ctx context.Context, request *model.ListRequest) (*model.ListResponse[Tenant], error) {
 	eg, egCtx := syncs.NewCtxErrGroup(ctx)
 
 	var tenants []*Tenant
@@ -59,10 +61,13 @@ func (s service) ListTenants(ctx context.Context, request *ListTenantsRequest) (
 
 	err := eg.Wait()
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	return tenants, int(count), nil
+	return &model.ListResponse[Tenant]{
+		Items: tenants,
+		Count: int(count),
+	}, nil
 }
 
 func (s service) GetTenant(ctx context.Context, request *GetTenantRequest) (*Tenant, error) {
@@ -80,7 +85,7 @@ func (s service) CreateTenant(ctx context.Context, request *CreateTenantRequest)
 	tenant := &Tenant{
 		ID:                      tenantID,
 		Name:                    request.Name,
-		State:                   1,
+		Status:                  1,
 		Domain:                  request.Domain,
 		Timezone:                request.Timezone,
 		ProductionType:          1,

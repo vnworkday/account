@@ -3,9 +3,6 @@ package transport
 import (
 	"context"
 
-	"github.com/vnworkday/account/internal/domain/tenant"
-	"github.com/vnworkday/account/internal/model"
-
 	"buf.build/gen/go/ntduycs/vnworkday/grpc/go/account/tenant/v1/tenantv1grpc"
 	tenantv1 "buf.build/gen/go/ntduycs/vnworkday/protocolbuffers/go/account/tenant/v1"
 	"github.com/go-kit/kit/transport/grpc"
@@ -28,16 +25,25 @@ type TenantServerParams struct {
 
 func NewTenantGrpcServer(params TenantServerParams) tenantv1grpc.TenantServiceServer {
 	return &tenantServer{
-		listTenantHandler: grpc.NewServer(
+		listTenantHandler: newGRPCServer(
 			params.Endpoints.DoListTenants,
-			func(ctx context.Context, in any) (any, error) {
-				return converter.Convert[tenantv1.ListTenantsRequest, model.ListRequest](
-					ctx, in, converter.ToListRequest)
-			},
-			func(ctx context.Context, out any) (any, error) {
-				return converter.Convert[model.ListResponse[tenant.Tenant], tenantv1.ListTenantsResponse](
-					ctx, out, converter.ToListResponse)
-			},
+			converter.ToListRequest,
+			converter.ToListResponse,
+		),
+		getTenantHandler: newGRPCServer(
+			params.Endpoints.DoGetTenant,
+			converter.ToGetRequest,
+			converter.ToGetResponse,
+		),
+		createTenantHandler: newGRPCServer(
+			params.Endpoints.DoCreateTenant,
+			converter.ToCreateRequest,
+			converter.ToCreateResponse,
+		),
+		updateTenantHandler: newGRPCServer(
+			params.Endpoints.DoUpdateTenant,
+			converter.ToUpdateRequest,
+			converter.ToUpdateResponse,
 		),
 	}
 }

@@ -11,20 +11,20 @@ import (
 	"go.uber.org/fx"
 )
 
-type TenantGRPCAdapter struct {
+type TenantGRPCServer struct {
 	listTenantHandler   grpc.Handler
 	getTenantHandler    grpc.Handler
 	createTenantHandler grpc.Handler
 	updateTenantHandler grpc.Handler
 }
 
-type TenantGRPCAdapterParams struct {
+type TenantGRPCServerParams struct {
 	fx.In
 	Port tenant.Port
 }
 
-func NewTenantGRPCAdapter(params TenantGRPCAdapterParams) tenantv1grpc.TenantServiceServer {
-	return &TenantGRPCAdapter{
+func NewTenantGRPCServer(params TenantGRPCServerParams) tenantv1grpc.TenantServiceServer {
+	return &TenantGRPCServer{
 		listTenantHandler: adapter.NewGRPCServer(
 			params.Port.DoListTenants,
 			tenant.ToListRequest,
@@ -48,7 +48,7 @@ func NewTenantGRPCAdapter(params TenantGRPCAdapterParams) tenantv1grpc.TenantSer
 	}
 }
 
-func (s *TenantGRPCAdapter) CreateTenant(
+func (s *TenantGRPCServer) CreateTenant(
 	ctx context.Context,
 	request *tenantv1.CreateTenantRequest,
 ) (*tenantv1.CreateTenantResponse, error) {
@@ -57,7 +57,7 @@ func (s *TenantGRPCAdapter) CreateTenant(
 	)
 }
 
-func (s *TenantGRPCAdapter) GetTenant(
+func (s *TenantGRPCServer) GetTenant(
 	ctx context.Context,
 	request *tenantv1.GetTenantRequest,
 ) (*tenantv1.GetTenantResponse, error) {
@@ -66,7 +66,7 @@ func (s *TenantGRPCAdapter) GetTenant(
 	)
 }
 
-func (s *TenantGRPCAdapter) ListTenants(
+func (s *TenantGRPCServer) ListTenants(
 	ctx context.Context,
 	request *tenantv1.ListTenantsRequest,
 ) (*tenantv1.ListTenantsResponse, error) {
@@ -75,7 +75,7 @@ func (s *TenantGRPCAdapter) ListTenants(
 	)
 }
 
-func (s *TenantGRPCAdapter) UpdateTenant(
+func (s *TenantGRPCServer) UpdateTenant(
 	ctx context.Context,
 	request *tenantv1.UpdateTenantRequest,
 ) (*tenantv1.UpdateTenantResponse, error) {

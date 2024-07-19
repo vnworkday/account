@@ -17,7 +17,7 @@ func ServeGRPC[Req any, Resp any](ctx context.Context, request *Req, handler grp
 
 	castResp, ok := resp.(*Resp)
 	if !ok {
-		return nil, errors.New("adapter: cannot cast before returning")
+		return nil, errors.New("server: cannot cast before returning")
 	}
 
 	return castResp, nil

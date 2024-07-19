@@ -3,8 +3,6 @@ package tenant
 import (
 	"context"
 	"time"
-
-
 	model2 "github.com/vnworkday/account/internal/common/domain"
 
 	"github.com/vnworkday/account/internal/domain/entity"

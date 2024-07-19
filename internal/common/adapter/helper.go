@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"context"
+
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/transport/grpc"
 	"github.com/pkg/errors"

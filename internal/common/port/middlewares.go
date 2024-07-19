@@ -1,4 +1,4 @@
-// nolint:nonamedreturns
+//nolint:nonamedreturns
 package port
 
 import (

@@ -1,13 +1,12 @@
 package repo
 
 import (
+	"github.com/vnworkday/account/internal/common/fixture"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/vnworkday/account/internal/common/domain"
-
-	"github.com/vnworkday/account/internal/fixture"
 )
 
 func TestStringifyFilter(t *testing.T) {

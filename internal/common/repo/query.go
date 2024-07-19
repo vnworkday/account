@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-
-
 	"github.com/vnworkday/account/internal/common/domain"
 
 	"github.com/pkg/errors"

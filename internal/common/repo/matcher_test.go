@@ -1,10 +1,9 @@
 package repo
 
 import (
+	"github.com/vnworkday/account/internal/common/fixture"
 	"strings"
 	"testing"
-
-	"github.com/vnworkday/account/internal/fixture"
 
 	"github.com/pkg/errors"
 )

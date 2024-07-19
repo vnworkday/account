@@ -1,7 +1,7 @@
 package util
 
-import "github.com/pkg/errors"
-
+// SafeCast is a helper function to safely cast an interface to a specific type.
+// It mainly to avoid annoying type assertion lint checks when we are sure about the type.
 func SafeCast[T any](from any) T {
 	to, ok := from.(T)
 
@@ -10,16 +10,4 @@ func SafeCast[T any](from any) T {
 	}
 
 	return to
-}
-
-func UnsafeCast[T any](from any) (T, error) {
-	to, ok := from.(T)
-
-	if !ok {
-		var zero T
-
-		return zero, errors.New("cast failed")
-	}
-
-	return to, nil
 }

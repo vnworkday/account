@@ -1,10 +1,11 @@
 package repo
 
 import (
-	"github.com/vnworkday/account/internal/common/fixture"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/vnworkday/account/internal/common/fixture"
 
 	"github.com/vnworkday/account/internal/common/domain"
 )

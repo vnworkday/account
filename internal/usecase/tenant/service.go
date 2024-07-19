@@ -3,7 +3,8 @@ package tenant
 import (
 	"context"
 	"time"
-	model2 "github.com/vnworkday/account/internal/common/domain"
+
+	"github.com/vnworkday/account/internal/common/domain"
 
 	"github.com/vnworkday/account/internal/domain/entity"
 	"github.com/vnworkday/account/internal/domain/repository"
@@ -17,7 +18,7 @@ import (
 )
 
 type Service interface {
-	ListTenants(ctx context.Context, request *model2.ListRequest) (*model2.ListResponse[entity.Tenant], error)
+	ListTenants(ctx context.Context, request *domain.ListRequest) (*domain.ListResponse[entity.Tenant], error)
 	GetTenant(ctx context.Context, request *GetTenantRequest) (*entity.Tenant, error)
 	CreateTenant(ctx context.Context, request *CreateTenantRequest) (*entity.Tenant, error)
 	UpdateTenant(ctx context.Context, request *UpdateTenantRequest) (*entity.Tenant, error)
@@ -43,8 +44,8 @@ type service struct {
 
 func (s service) ListTenants(
 	ctx context.Context,
-	request *model2.ListRequest,
-) (*model2.ListResponse[entity.Tenant], error) {
+	request *domain.ListRequest,
+) (*domain.ListResponse[entity.Tenant], error) {
 	eg, egCtx := syncs.NewCtxErrGroup(ctx)
 
 	var tenants []*entity.Tenant
@@ -69,7 +70,7 @@ func (s service) ListTenants(
 		return nil, err
 	}
 
-	return &model2.ListResponse[entity.Tenant]{
+	return &domain.ListResponse[entity.Tenant]{
 		Items: tenants,
 		Count: int(count),
 	}, nil

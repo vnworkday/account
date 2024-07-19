@@ -1,9 +1,10 @@
 package repo
 
 import (
+	"testing"
+
 	"github.com/vnworkday/account/internal/common/domain"
 	"github.com/vnworkday/account/internal/common/fixture"
-	"testing"
 )
 
 func TestQueryBuilder_Select(t *testing.T) {

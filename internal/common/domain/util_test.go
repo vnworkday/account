@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"github.com/vnworkday/account/internal/common/fixture"
 	"testing"
+
+	"github.com/vnworkday/account/internal/common/fixture"
 )
 
 func TestStructToTable(t *testing.T) {
